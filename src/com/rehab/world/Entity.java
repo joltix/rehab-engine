@@ -1,0 +1,150 @@
+package com.rehab.world;
+
+public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecreaseListener, OnMoveListener {
+
+	// Profile
+	private String label;
+	private int mInstanceId;
+	private int faction;
+	private Entity.Status mStatus = Entity.Status.WAITING;
+	
+	// Collision data
+	private Hitbox mCollision;
+	
+	// Current health and maximum possible
+	private double mHealth;
+	private double mMaxHealth;
+	
+	// Location data
+	private double mLocationX;
+	private double mLocationY;
+	
+	// Indirect location data
+	private double facing;
+	private double speed;
+	
+	// Callbacks
+	private OnHealthIncreaseListener mHealthIncreaseListener;
+	private OnHealthDecreaseListener mHealthDecreaseListener;
+	private OnMoveListener mMoveListener;
+	
+	/**
+	 * Sets the health of the Entity but obeys the set maximum health boundary. That is,
+	 * setting the health of this instance beyond a maximum defined by setMaximumHealth()
+	 * will only set the health to the maximum. Similarly, setting health below 0 will
+	 * only set the health to 0.
+	 * 
+	 * This method also updates an instance's status. Given the value snapping previously
+	 * defined, should the new health value be 0 an instance is set as Entity.Status.DEAD
+	 * while any other value sets Entity.Status.ALIVE.
+	 * 
+	 * @param health
+	 * 		the new amount of health.
+	 */
+	protected void setHealth(double health) {
+		// Entity was set as immortal so health changes don't matter
+		if (mMaxHealth <= 0) return;
+		
+		// Prevent health from going past maximum and disable instance if zeroed health
+		if (health > mMaxHealth) {
+			health = mMaxHealth;
+			mStatus = Entity.Status.ALIVE;
+		} else if (health <= 0) {
+			health = 0;
+			mStatus = Entity.Status.DEAD;
+		} else mStatus = Entity.Status.ALIVE;
+		
+		// Update health values
+		double oldHealth = mHealth;
+		mHealth = health;
+		
+		// Trigger callbacks depending on change in health
+		double diff = health - mHealth;
+		if (mHealthIncreaseListener != null)
+			if (diff >= 0) mHealthIncreaseListener.onHealthIncrease(oldHealth, mHealth);
+			else mHealthDecreaseListener.onHealthDecrease(oldHealth, mHealth);
+	}
+
+	/**
+	 * Sets the X and Y location of the Entity. This method has no interpolation of
+	 * any kind and so location values will "teleport" to the new location given.
+	 * @param x
+	 * 		the new X coordinate.
+	 * @param y
+	 * 		the new Y coordinate.
+	 */
+	protected void moveTo(double x, double y) {
+		// Update location vals while remembering old
+		double oldX = mLocationX;
+		double oldY = mLocationY;
+		mLocationX = x;
+		mLocationY = y;
+		
+		// Trigger location callback
+		if (mMoveListener != null) mMoveListener.onMove(oldX, oldY, mLocationX, mLocationY);
+	}
+	
+	/**
+	 * Checks whether or not the instance has collided with a given Entity.
+	 * @param e
+	 * 		the Entity the instance may have touched.
+	 * @return
+	 * 		true if the Entity was hit, false otherwise.
+	 */
+	public boolean collidesWith(Entity e) { return mCollision.intersects(e.mCollision); }
+	
+	public void destroyLinks() {
+		mHealthIncreaseListener = null;
+		mHealthDecreaseListener = null;
+		mMoveListener = null;
+	}
+	
+	protected void setCollisionModel(Hitbox h) { mCollision = h; }
+	
+	/**
+	 * Sets the maximum boundary at which health is considered 100% or "full". If the
+	 * maximum health value given is <= 0, then the Entity is treated as immortal and
+	 * whose health cannot be changed, though damage may still be calculated against
+	 * the instance. As such, health listeners will not be called but damage listeners
+	 * maintain their function. To reverse the effect, set a maximum health > 0.
+	 * @param maxHealth
+	 * 		the highest number of health points allowed.
+	 */
+	protected void setMaximumHealth(double maxHealth) { mMaxHealth = maxHealth; }
+	
+	public void setId(int id) { mInstanceId = id; }
+		
+	public Entity.Status status() { return mStatus; }
+	
+	public String label() { return label; }
+	
+	public int id() { return mInstanceId; }
+	
+	public double x() { return mLocationX; }
+	
+	public double y() { return mLocationY; }
+	
+	public double direction() { return facing; }
+		
+	public double speed() { return speed; }
+	
+	public int faction() { return faction; }
+	
+	/**
+	 * Status enum represents three possible states for an Entity instance.
+	 * 
+	 * ALIVE   - the instance is in-game
+	 * 
+	 * DEAD    - the instance is in-game but disabled and with 0 health
+	 * 
+	 * WAITING - the instance is no longer in-game but has not yet been destroyed
+	 * 			 by the InstanceManager
+	 * 
+	 * @author christian
+	 *
+	 */
+	public enum Status {
+		ALIVE, DEAD, WAITING
+	}
+	
+}
