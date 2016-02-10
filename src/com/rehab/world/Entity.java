@@ -1,5 +1,8 @@
 package com.rehab.world;
 
+import com.rehab.animation.Drawable;
+import com.rehab.animation.Sprite;
+
 public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecreaseListener, OnMoveListener, Drawable {
 
 	// Profile
@@ -135,6 +138,8 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 * 		the current direction in degrees.
 	 */
 	public double getDirection() { return mDirection; }
+	
+	public Sprite getSprite() { return mSprite; }
 	
 	public double getX() { return mLocationX; }
 	
