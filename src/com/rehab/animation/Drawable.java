@@ -2,9 +2,9 @@ package com.rehab.animation;
 
 public interface Drawable {
 	
-	int getX ();
+	double getX ();
 	
-	int getY ();
+	double getY ();
 	
 	Sprite getSprite();
 	
