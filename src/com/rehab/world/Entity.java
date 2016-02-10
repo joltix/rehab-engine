@@ -1,27 +1,31 @@
 package com.rehab.world;
 
-public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecreaseListener, OnMoveListener {
+public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecreaseListener, OnMoveListener, Drawable {
 
 	// Profile
 	private String label;
 	private int mInstanceId;
 	private int faction;
-	private Entity.Status mStatus = Entity.Status.WAITING;
+	private Sprite mSprite;
+	
 	
 	// Collision data
 	private Hitbox mCollision;
+	
 	
 	// Current health and maximum possible
 	private double mHealth;
 	private double mMaxHealth;
 	
-	// Location data
+	
+	// Physics data
 	private double mLocationX;
 	private double mLocationY;
+	private double mDirection; // degrees
 	
-	// Indirect location data
-	private double facing;
-	private double speed;
+	private double mMass; // kilograms
+	private double mSpeed; // meters/second^2
+	
 	
 	// Callbacks
 	private OnHealthIncreaseListener mHealthIncreaseListener;
@@ -33,11 +37,6 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 * setting the health of this instance beyond a maximum defined by setMaximumHealth()
 	 * will only set the health to the maximum. Similarly, setting health below 0 will
 	 * only set the health to 0.
-	 * 
-	 * This method also updates an instance's status. Given the value snapping previously
-	 * defined, should the new health value be 0 an instance is set as Entity.Status.DEAD
-	 * while any other value sets Entity.Status.ALIVE.
-	 * 
 	 * @param health
 	 * 		the new amount of health.
 	 */
@@ -48,11 +47,7 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 		// Prevent health from going past maximum and disable instance if zeroed health
 		if (health > mMaxHealth) {
 			health = mMaxHealth;
-			mStatus = Entity.Status.ALIVE;
-		} else if (health <= 0) {
-			health = 0;
-			mStatus = Entity.Status.DEAD;
-		} else mStatus = Entity.Status.ALIVE;
+		} else if (health <= 0) health = 0;
 		
 		// Update health values
 		double oldHealth = mHealth;
@@ -73,7 +68,7 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 * @param y
 	 * 		the new Y coordinate.
 	 */
-	protected void moveTo(double x, double y) {
+	public void moveTo(double x, double y) {
 		// Update location vals while remembering old
 		double oldX = mLocationX;
 		double oldY = mLocationY;
@@ -113,38 +108,40 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	protected void setMaximumHealth(double maxHealth) { mMaxHealth = maxHealth; }
 	
 	public void setId(int id) { mInstanceId = id; }
-		
-	public Entity.Status status() { return mStatus; }
-	
-	public String label() { return label; }
-	
-	public int id() { return mInstanceId; }
-	
-	public double x() { return mLocationX; }
-	
-	public double y() { return mLocationY; }
-	
-	public double direction() { return facing; }
-		
-	public double speed() { return speed; }
-	
-	public int faction() { return faction; }
 	
 	/**
-	 * Status enum represents three possible states for an Entity instance.
-	 * 
-	 * ALIVE   - the instance is in-game
-	 * 
-	 * DEAD    - the instance is in-game but disabled and with 0 health
-	 * 
-	 * WAITING - the instance is no longer in-game but has not yet been destroyed
-	 * 			 by the InstanceManager
-	 * 
-	 * @author christian
-	 *
+	 * Sets the instance's facing direction ranging from 0 to 360 degrees. Values larger
+	 * than 360 will wrap around while negative values will be treated as direction in
+	 * reverse. Eg. setDirection(-45) will set a direction of 315 degrees.
+	 * @param direction
+	 * 		the facing in degrees.
 	 */
-	public enum Status {
-		ALIVE, DEAD, WAITING
+	public void setDirection(double direction) {
+		mDirection = direction - (360 * Math.floor((direction / 360)));
 	}
+			
+	public String getLabel() { return label; }
 	
+	/**
+	 * Gets an instance's unique identifier.
+	 * @return
+	 * 		the unique identifier for the instance.
+	 */
+	public int getId() { return mInstanceId; }
+	
+	/**
+	 * Gets the facing direction of an instance.
+	 * @return
+	 * 		the current direction in degrees.
+	 */
+	public double getDirection() { return mDirection; }
+	
+	public double getX() { return mLocationX; }
+	
+	public double getY() { return mLocationY; }
+			
+	public double getSpeed() { return mSpeed; }
+	
+	public int getFaction() { return faction; }
+		
 }

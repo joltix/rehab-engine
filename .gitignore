@@ -1,0 +1,10 @@
+
+*.class
+
+.classpath
+
+.project
+
+*.prefs
+
+src/com/rehab/world/Physics.java
