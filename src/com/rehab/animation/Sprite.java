@@ -1,3 +1,4 @@
+package com.rehab.animation;
 
 public class Sprite {
 	
