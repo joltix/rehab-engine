@@ -8,13 +8,13 @@ public class InstanceManager {
 	
 	
 	// A table containing all instances of Entity in-game
-	private static Hashtable<Integer, Entity> mGlobalInstanceTable;
-	private static int mLatestUsedId;
+	private Hashtable<Integer, Entity> mGlobalInstanceTable;
+	private int mLatestUsedId = 1;
 	
 	
 	// Tables to categorize instance statuses
-	private static Hashtable<Integer, Entity> mLoadedInstanceTable;
-	private static Hashtable<Integer, Entity> mWaitingInstanceTable;
+	private Hashtable<Integer, Entity> mLoadedInstanceTable;
+	private Hashtable<Integer, Entity> mWaitingInstanceTable;
 	
 	
 	/**
