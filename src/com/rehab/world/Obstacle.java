@@ -2,9 +2,10 @@ package com.rehab.world;
 
 public class Obstacle extends Entity {
 
-	public Obstacle() {
+	public Obstacle(double mass) {
+		super(mass);
 		// Prevent damage
-		setHealth(0);
+		setHealth(-1);
 	}
 
 	@Override
