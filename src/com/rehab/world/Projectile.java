@@ -4,19 +4,10 @@ public class Projectile extends Entity implements Combatant {
 
 	private Projectile.Damage mDamageType;
 	
-	public Projectile(int healthCap) {
+	public Projectile(double mass, double healthCap) {
+		super(mass);
 		setMaximumHealth(healthCap);
 		mDamageType = Damage.DEFAULT;
-	}
-	
-	public Projectile(int id, Projectile.Damage type) {
-		mDamageType = type;
-	}
-
-	@Override
-	public double power() {
-		// TODO Auto-generated method stub
-		return 0;
 	}
 
 	@Override
