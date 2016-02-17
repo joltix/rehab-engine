@@ -22,6 +22,7 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	
 	
 	// Physics data
+	private boolean mContact;
 	private double mLocationX;
 	private double mLocationY;
 	private double mDirection; // degrees
@@ -35,17 +36,21 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	private OnHealthDecreaseListener mHealthDecreaseListener;
 	private OnMoveListener mMoveListener;
 	
+	protected Entity(double mass) {
+		mMass = mass;
+	}
+	
 	/**
 	 * Sets the health of the Entity but obeys the set maximum health boundary. That is,
 	 * setting the health of this instance beyond a maximum defined by setMaximumHealth()
-	 * will only set the health to the maximum. Similarly, setting health below 0 will
-	 * only set the health to 0.
+	 * will only set the health to the defined maximum. Similarly, setting health less
+	 * than 0 will only set the health to 0.
 	 * @param health
 	 * 		the new amount of health.
 	 */
 	protected void setHealth(double health) {
 		// Entity was set as immortal so health changes don't matter
-		if (mMaxHealth <= 0) return;
+		if (mMaxHealth < 0) return;
 		
 		// Prevent health from going past maximum and disable instance if zeroed health
 		if (health > mMaxHealth) {
@@ -65,18 +70,38 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 
 	/**
 	 * Sets the X and Y location of the Entity. This method has no interpolation of
-	 * any kind and so location values will "teleport" to the new location given.
+	 * any kind and so location values will "teleport" to the new coordinates given.
 	 * @param x
 	 * 		the new X coordinate.
 	 * @param y
 	 * 		the new Y coordinate.
 	 */
-	public void moveTo(double x, double y) {
+	public void moveTo(double x, double y) { move(x, y, false); }
+	
+	/**
+	 * Shifts the X and Y location of the Entity. This method has no interpolation of
+	 * any kind and so location values will "teleport" to the new coordinates shifted
+	 * by the x and y values given.
+	 * @param x
+	 * 		the number of pixels to add to the x-coordinate.
+	 * @param y
+	 * 		the number of pixels to add to the y-coordinate.
+	 */
+	public void moveBy(double x, double y) { move(x, y, true); }
+	
+	private void move(double x, double y, boolean shiftBy) {
 		// Update location vals while remembering old
 		double oldX = mLocationX;
 		double oldY = mLocationY;
-		mLocationX = x;
-		mLocationY = y;
+		
+		// Shift by the pixels or assign
+		if (shiftBy) {
+			mLocationX += x;
+			mLocationY += y;
+		} else {
+			mLocationX = x;
+			mLocationY = y;
+		}
 		
 		// Trigger location callback
 		if (mMoveListener != null) mMoveListener.onMove(oldX, oldY, mLocationX, mLocationY);
@@ -90,12 +115,6 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 * 		true if the Entity was hit, false otherwise.
 	 */
 	public boolean collidesWith(Entity e) { return mCollision.intersects(e.mCollision); }
-	
-	public void destroyLinks() {
-		mHealthIncreaseListener = null;
-		mHealthDecreaseListener = null;
-		mMoveListener = null;
-	}
 	
 	protected void setCollisionModel(Hitbox h) { mCollision = h; }
 	
@@ -122,6 +141,8 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	public void setDirection(double direction) {
 		mDirection = direction - (360 * Math.floor((direction / 360)));
 	}
+	
+	public void setSpeed(double speed) { mSpeed = speed; }
 			
 	public String getLabel() { return label; }
 	
@@ -141,12 +162,33 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	
 	public Sprite getSprite() { return mSprite; }
 	
+	public int getFaction() { return faction; }
+	
 	public double getX() { return mLocationX; }
 	
 	public double getY() { return mLocationY; }
+	
+	public double getWidth() {
+		if (mCollision == null) return 0;
+		return mCollision.getWidth();
+	}
+	
+	public double getHeight() {
+		if (mCollision == null) return 0;
+		return mCollision.getHeight();
+	}
 			
 	public double getSpeed() { return mSpeed; }
 	
-	public int getFaction() { return faction; }
-		
+	public double getMass() { return mMass; }
+	
+	public void setContact(boolean hasContact) { mContact = hasContact; }
+	
+	/**
+	 * Checks whether or not the instance is falling or stable on a surface.
+	 * @return
+	 * 		true if the instance is falling, false otherwise.
+	 */
+	public boolean hasContact() { return mContact; }
+			
 }
