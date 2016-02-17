@@ -1,26 +1,32 @@
 package com.rehab.animation;
 
-import java.lang.Object;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
-import javafx.scene.image.WritableImage;
 
 public class Sprite {
-	// a wrapper for the BufferImage
-	// mirror image method
-	// store bufferimage as class memeber
-	private WritableImage buffer;
-	// private GraphicsContext gpu;
 
+	private Image buffer;
 	private int id;
 
-	private Sprite(WritableImage b) {
+	@SuppressWarnings("unused")
+	private Sprite() {  }
+	
+	/**
+	 * Constructor for loading an image from a file. The file must be
+	 * within the same directory as the Sprite.java
+	 * @param fileName
+	 * 		the name of the image with file type.
+	 */
+	public Sprite(String fileName) {
 		// store the image
-
-		buffer = b;
+		buffer = new Image(Sprite.class.getResourceAsStream(fileName));
 	}
 
-	public WritableImage mirror(WritableImage image) {
+	/**
+	 * INCOMPLETE METHOD
+	 */
+	public Image mirror(Image image) {
 		PixelReader pixel = image.getPixelReader();
 		
 		for (int i = 0; i < image.getWidth(); i++) {
@@ -35,28 +41,13 @@ public class Sprite {
 
 	}
 
-	public void draw(GraphicsContext g, int x, int y) {
-		g.drawImage(buffer, x, y);
+	public void draw(GraphicsContext g, int x, int y) { g.drawImage(buffer, x, y); }
 
-	}
-
-	public int getId() {
-
-		return id;
-	}
-
-	public void setId(int i) {
-
-		id = i;
-	}
+	public void setId(int i) { id = i; }
 	
-	public double getHeight(){
-		return buffer.getHeight(); 
-		
-	}
+	public int getId() { return id; }
 	
-	public double getWidth(){
-		
-		return buffer.getWidth(); 
-	}
+	public double getHeight(){ return buffer.getHeight(); }
+	
+	public double getWidth() { return buffer.getWidth(); }
 }
