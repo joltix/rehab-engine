@@ -1,17 +1,20 @@
 package com.rehab.world;
 
+import com.rehab.animation.Sprite;
+
 public class Hitbox {
 	
 	// Top left corner and bottom right corner of rectangular model
 	private double mTopLeftX, mTopLeftY,
 					mBottomRightX, mBottomRightY;
-		
+	// Dimensions
 	private double mWidth, mHeight;
 
 
 	/**
 	 * Empty Hitboxes must not be created.
 	 */
+	@SuppressWarnings("unused")
 	private Hitbox() {  }
 
 	/**
@@ -21,9 +24,9 @@ public class Hitbox {
 	 * 		the Entity whose image width and height should model the collidable area.
 	 */
 	public Hitbox(Entity e) {
-
-		// TODO - Record coordinates based on Entity image
-		
+		Sprite img = e.getSprite();
+		mWidth = img.getWidth();
+		mHeight = img.getHeight();
 	}
 
 
@@ -74,13 +77,12 @@ public class Hitbox {
 		mTopLeftX = x;
 		mTopLeftY = y;
 		mBottomRightX = x + mWidth;
-		mBottomRightY = y + mHeight;	
-	
 		mBottomRightY = y + mHeight;
 	}
 
 	/**
 	 * Shrinks the actual size of an object's collision model on four optional sides.
+	 * Any negative values given will cause no padding to be set (non-retroactive).
 	 * @param right
 	 * 		how many px to pull back on the right.
 	 * @param top
@@ -91,9 +93,29 @@ public class Hitbox {
 	 * 		how many px to pull back on the bottom.
 	 */
 	public void setPadding(double right, double top, double left, double bottom) {
+		// Ensure negatives don't mess with collision
+		if (right < 0 || top < 0 || left < 0 || bottom < 0) return;
 		mTopLeftX += left;
 		mTopLeftY += top;
 		mBottomRightX -= right;
 		mBottomRightY -= bottom;
+		
+		// Update the dimensions
+		mWidth = mBottomRightX - mTopLeftX;
+		mHeight = mBottomRightY - mTopLeftY;
 	}
+	
+	/**
+	 * Gets the width of the collision model.
+	 * @return
+	 * 		the width in pixels.
+	 */
+	public double getWidth() { return mWidth; }
+	
+	/**
+	 * Gets the height of the collision model.
+	 * @return
+	 * 		the height in pixels.
+	 */
+	public double getHeight() { return mHeight; }
 }

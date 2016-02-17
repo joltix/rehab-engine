@@ -8,13 +8,13 @@ public class InstanceManager {
 	
 	
 	// A table containing all instances of Entity in-game
-	private Hashtable<Integer, Entity> mGlobalInstanceTable;
+	private Hashtable<Integer, Entity> mGlobalInstanceTable = new Hashtable<Integer, Entity>();
 	private int mLatestUsedId = 1;
 	
 	
 	// Tables to categorize instance statuses
-	private Hashtable<Integer, Entity> mLoadedInstanceTable;
-	private Hashtable<Integer, Entity> mWaitingInstanceTable;
+	private Hashtable<Integer, Entity> mLoadedInstanceTable = new Hashtable<Integer, Entity>();
+	private Hashtable<Integer, Entity> mWaitingInstanceTable = new Hashtable<Integer, Entity>();
 	
 	
 	/**
@@ -23,7 +23,7 @@ public class InstanceManager {
 	 * 		the InstanceManager.
 	 */
 	public static InstanceManager getInstance() {
-		synchronized (mManager) {
+		synchronized (InstanceManager.class) {
 			if (mManager == null) mManager = new InstanceManager();
 			return mManager;
 		}
@@ -77,7 +77,6 @@ public class InstanceManager {
 			// Remove from global table and destroy out-reaching links
 			if (mWaitingInstanceTable.remove(id) != null) return false;
 			mGlobalInstanceTable.remove(id);
-			e.destroyLinks();
 			return true;
 		}
 	}
@@ -140,6 +139,13 @@ public class InstanceManager {
 	 * 		currently in the game world, false otherwise.
 	 */
 	public boolean isLoaded(int id) { return mLoadedInstanceTable.containsKey(id); }
+	
+	/**
+	 * Gets an Iterable containing all Entities currently loaded into the game.
+	 * @return
+	 * 		the Iterable of Entities.
+	 */
+	public Iterable<Entity> getLoadedEntities() { return mLoadedInstanceTable.values(); }
 	
 	/**
 	 * Creates an instance id to be used when registering an

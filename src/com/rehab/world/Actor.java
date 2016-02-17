@@ -5,17 +5,11 @@ public class Actor extends Entity implements Combatant {
 	private OnDamageTakenListener mDamageTakenListener;
 	private OnDamageDealtListener mDamageDealtListener;
 	
-	public Actor(double healthCap) {
+	public Actor(double mass, double healthCap) {
+		super(mass);
 		setMaximumHealth(healthCap);
 	}
-
-	@Override
-	public double power() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
 	
-
 	@Override
 	public void setOnDamageTakenListener(OnDamageTakenListener listener) {
 		mDamageTakenListener = listener;
