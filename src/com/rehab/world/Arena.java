@@ -9,7 +9,7 @@ public class Arena {
 	// Title of the level
 	private String mName;
 	// Default gravity is at Earth level
-	private double mGrav = Physics.getPlanetGravity(Physics.EARTH_MASS, Physics.EARTH_RADIUS);
+	private double mGrav = 9.8
 
 	/**
 	 * Prevents default instantiation
