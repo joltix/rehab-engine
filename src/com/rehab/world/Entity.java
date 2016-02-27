@@ -2,44 +2,81 @@ package com.rehab.world;
 
 import com.rehab.animation.Drawable;
 import com.rehab.animation.Sprite;
+import com.rehab.world.Phys.Vector;
 
 public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecreaseListener, OnMoveListener, Drawable {
 
 	// Profile
-	private String label;
 	private int mInstanceId;
-	private int faction;
 	private Sprite mSprite;
-	
-	
-	// Collision data
+
+	// Physics and collision data
+	private Phys mPhys;
 	private Hitbox mCollision;
-	
-	
-	// Current health and maximum possible
+
+	// Stats
 	private double mHealth;
 	private double mMaxHealth;
 	
-	
-	// Physics data
-	private boolean mContact;
-	private double mLocationX;
-	private double mLocationY;
-	private double mDirection; // degrees
-	
-	private double mMass; // kilograms
-	private double mSpeed; // meters/second^2
-	
-	
+	// Flags
+	private boolean mVisible;
+
 	// Callbacks
 	private OnHealthIncreaseListener mHealthIncreaseListener;
 	private OnHealthDecreaseListener mHealthDecreaseListener;
-	private OnMoveListener mMoveListener;
-	
+
+	/**
+	 * Constructor for an Entity with basic physics.
+	 * @param mass
+	 * 		mass in kilograms.
+	 */
 	protected Entity(double mass) {
-		mMass = mass;
+		mPhys = new Phys(mass);
+	}
+
+	/**
+	 * Applies a force vector to move the instance along.
+	 * @param force
+	 * 		the force Vector to affect the Entity.
+	 */
+	public void moveImpulse(Vector force) {
+		// Apply force
+		mPhys.moveImpulse(force);
+		// Synchronize physics and collision's new locations
+		syncModels();
+	}
+
+	/**
+	 * Moves the Entity to the specified x and y coordinates. Calling this method will
+	 * move the instance to the given coordinates but will erase direction and speed.
+	 * The instance will relocate standing still.
+	 * @param x
+	 * 		the new x coordinate.
+	 * @param y
+	 * 		the new y coordinate.
+	 */
+	public void moveTo(double x, double y) {
+		mPhys.moveTo(x, y, false);
+		syncModels();
+	}
+
+	/**
+	 * Synchronizes the x and y coordinates of the collision model with the physics
+	 * model.
+	 */
+	private void syncModels() {
+		// Sync collision model
+		if (mCollision != null) mCollision.moveTo(mPhys.getX(), mPhys.getY());
 	}
 	
+	/**
+	 * Gets the instance's amount of health. The health will be between 0 and the
+	 * maximum health set by a call to setMaximumHealth().
+	 * @return
+	 * 		the current health.
+	 */
+	public double getHealth() { return mHealth; }
+
 	/**
 	 * Sets the health of the Entity but obeys the set maximum health boundary. That is,
 	 * setting the health of this instance beyond a maximum defined by setMaximumHealth()
@@ -51,16 +88,16 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	protected void setHealth(double health) {
 		// Entity was set as immortal so health changes don't matter
 		if (mMaxHealth < 0) return;
-		
+
 		// Prevent health from going past maximum and disable instance if zeroed health
 		if (health > mMaxHealth) {
 			health = mMaxHealth;
 		} else if (health <= 0) health = 0;
-		
+
 		// Update health values
 		double oldHealth = mHealth;
 		mHealth = health;
-		
+
 		// Trigger callbacks depending on change in health
 		double diff = health - mHealth;
 		if (mHealthIncreaseListener != null)
@@ -69,55 +106,12 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	}
 
 	/**
-	 * Sets the X and Y location of the Entity. This method has no interpolation of
-	 * any kind and so location values will "teleport" to the new coordinates given.
-	 * @param x
-	 * 		the new X coordinate.
-	 * @param y
-	 * 		the new Y coordinate.
+	 * Sets the collision model to use for the Entity's collision reactions.
+	 * @param h
+	 * 		the Hitbox representing the Entity's collision.
 	 */
-	public void moveTo(double x, double y) { move(x, y, false); }
-	
-	/**
-	 * Shifts the X and Y location of the Entity. This method has no interpolation of
-	 * any kind and so location values will "teleport" to the new coordinates shifted
-	 * by the x and y values given.
-	 * @param x
-	 * 		the number of pixels to add to the x-coordinate.
-	 * @param y
-	 * 		the number of pixels to add to the y-coordinate.
-	 */
-	public void moveBy(double x, double y) { move(x, y, true); }
-	
-	private void move(double x, double y, boolean shiftBy) {
-		// Update location vals while remembering old
-		double oldX = mLocationX;
-		double oldY = mLocationY;
-		
-		// Shift by the pixels or assign
-		if (shiftBy) {
-			mLocationX += x;
-			mLocationY += y;
-		} else {
-			mLocationX = x;
-			mLocationY = y;
-		}
-		
-		// Trigger location callback
-		if (mMoveListener != null) mMoveListener.onMove(oldX, oldY, mLocationX, mLocationY);
-	}
-	
-	/**
-	 * Checks whether or not the instance has collided with a given Entity.
-	 * @param e
-	 * 		the Entity the instance may have touched.
-	 * @return
-	 * 		true if the Entity was hit, false otherwise.
-	 */
-	public boolean collidesWith(Entity e) { return mCollision.intersects(e.mCollision); }
-	
 	protected void setCollisionModel(Hitbox h) { mCollision = h; }
-	
+
 	/**
 	 * Sets the maximum boundary at which health is considered 100% or "full". If the
 	 * maximum health value given is <= 0, then the Entity is treated as immortal and
@@ -128,67 +122,128 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 * 		the highest number of health points allowed.
 	 */
 	protected void setMaximumHealth(double maxHealth) { mMaxHealth = maxHealth; }
-	
-	public void setId(int id) { mInstanceId = id; }
-	
+
 	/**
-	 * Sets the instance's facing direction ranging from 0 to 360 degrees. Values larger
-	 * than 360 will wrap around while negative values will be treated as direction in
-	 * reverse. Eg. setDirection(-45) will set a direction of 315 degrees.
-	 * @param direction
-	 * 		the facing in degrees.
+	 * Gets the instance's physics model.
+	 * @return
+	 * 		the Phys instance representing the Entity's physics.
 	 */
-	public void setDirection(double direction) {
-		mDirection = direction - (360 * Math.floor((direction / 360)));
-	}
-	
-	public void setSpeed(double speed) { mSpeed = speed; }
-			
-	public String getLabel() { return label; }
-	
+	public Phys getPhysics() { return mPhys; }
+
+	/**
+	 * Gets the instance's visual representation.
+	 * @return
+	 * 		the Sprite to draw on-screen.
+	 */
+	public Sprite getSprite() { return mSprite; }
+
+	/**
+	 * Sets the Sprite to represent the Entity on-screen.
+	 * @param sprite
+	 * 		the Sprite to draw on-screen.
+	 */
+	public void setSprite(Sprite sprite) { mSprite = sprite; }
+
 	/**
 	 * Gets an instance's unique identifier.
 	 * @return
 	 * 		the unique identifier for the instance.
 	 */
 	public int getId() { return mInstanceId; }
+
+	/**
+	 * Sets an instance's unique identifier.
+	 * @param id
+	 * 		the unique identifier for the instance.
+	 */
+	public void setId(int id) { mInstanceId = id; }
 	
 	/**
-	 * Gets the facing direction of an instance.
+	 * Gets the instance's x coordinate.
 	 * @return
-	 * 		the current direction in degrees.
+	 * 		the x location.
 	 */
-	public double getDirection() { return mDirection; }
-	
-	public Sprite getSprite() { return mSprite; }
-	
-	public int getFaction() { return faction; }
-	
-	public double getX() { return mLocationX; }
-	
-	public double getY() { return mLocationY; }
-	
+	public double getX() { return mPhys.getX(); }
+
+	/**
+	 * Gets the instance's y coordinate.
+	 * @return
+	 * 		the y location.
+	 */
+	public double getY() { return mPhys.getY(); }
+
+	/**
+	 * Gets the collidable width of the instance in pixels. If the Entity has no collision
+	 * model set, this method returns 0.
+	 * @return
+	 * 		width in pixels.
+	 */
 	public double getWidth() {
 		if (mCollision == null) return 0;
 		return mCollision.getWidth();
 	}
-	
+
+	/**
+	 * Gets the collidable height of the instance in pixels. If the Entity has no collision
+	 * model set, this method returns 0.
+	 * @return
+	 * 		height in pixels.
+	 */
 	public double getHeight() {
 		if (mCollision == null) return 0;
 		return mCollision.getHeight();
 	}
-			
-	public double getSpeed() { return mSpeed; }
-	
-	public double getMass() { return mMass; }
-	
-	public void setContact(boolean hasContact) { mContact = hasContact; }
+
+	/**
+	 * Gets the instance's speed.
+	 * @return
+	 * 		speed in meters per second.
+	 */
+	public double getSpeed() { return mPhys.getSpeed(); }
 	
 	/**
-	 * Checks whether or not the instance is falling or stable on a surface.
-	 * @return
-	 * 		true if the instance is falling, false otherwise.
+	 * Sets the instance's speed. Changing speed will result in a faster travel
+	 * in the same direction as any previous heading.
+	 * @param metersPerSecond
+	 * 		speed in meters per second.
 	 */
-	public boolean hasContact() { return mContact; }
-			
+	public void setSpeed(double metersPerSecond) { mPhys.setSpeed(metersPerSecond); }
+
+	/**
+	 * Gets the instance's mass.
+	 * @return
+	 * 		mass in kilograms.
+	 */
+	public double getMass() { return mPhys.getMass(); }
+
+	/**
+	 * Checks whether or not the instance is affected by gravity.
+	 * @return
+	 * 		true if the instance is under the influence of gravity, false
+	 *		otherwise.
+	 */
+	public boolean isGravityEnabled() { return mPhys.isGravityEnabled(); }
+	
+	/**
+	 * Sets whether or not the Entity should be pulled to the source of gravity.
+	 * @param hasContact
+	 *		true if the Entity should not be affected by gravity, false to
+	 *		enable gravity.
+	 */
+	public void setEnableGravity(boolean gravityEnabled) { mPhys.setEnableGravity(gravityEnabled); }
+	
+	/**
+	 * Checks whether or not the Entity should be drawn on-screen.
+	 * @return
+	 * 		true if the instance should be drawn, false otherwise.
+	 */
+	public boolean isVisible() { return mVisible; }
+
+	/**
+	 * Sets whether or not the Entity should be drawn on-screen.
+	 * @param visible
+	 * 		true if the instance should be drawn, false otherwise.
+	 */
+	public void setVisibility(boolean visible) { mVisible = visible; }
+	
 }
