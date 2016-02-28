@@ -32,24 +32,6 @@ public class Phys {
      */
     public Phys(double mass) { mMass = mass; }
 
-    /**
-     * TODO INCOMPLETE - find the angle of bounce
-     *
-     */
-    public void impactWith(Phys phys) {
-        double speed1 = calcSpeedAfterImpact(this, phys);
-        double speed2 = calcSpeedAfterImpact(phys, this);
-        // Update with new speeds
-        mVelocity.changeMagnitude(speed1);
-        //phys.changeMagnitude(speed2);
-        // Update with new headings
-    }
-
-    private double calcSpeedAfterImpact(Phys p1, Phys p2) {
-        // Use equation for conservation of energy
-        return ((p1.mSpeed * (p1.mMass - p2.mMass)) + (2 * p2.mMass * p2.mSpeed)) / (p1.mMass + p2.mMass);
-    }
-
 	/**
 	 * Applies a velocity vector to move the instance along.
 	 * @param velocity
@@ -206,20 +188,34 @@ public class Phys {
             startX = v.startX;
             startY = v.startY;
             endX = v.endX;
-            endY = v.endy;
+            endY = v.endY;
         }
 
         /**
-         * Adds a given Vector to the calling Vector instance. The calling
-         * Vector's values will be changed.
+         * Adds a given Vector to the calling Vector instance, shifting the
+         * calling Vector's coordinates by the specified amounts.
          * @param v
          *      the Vector that should be added to the calling Vector.
          */
-        public void add(Vector v) {
-            startX += v.startX;
-            startY += v.startY;
-            endX += v.endX;
-            endY += v.endY;
+        public void add(Vector v) { add(v.startX, v.startY, v.endX, v.endY); }
+        
+        /**
+         * Adds a set of scalars to the calling Vector instance, shifting the
+         * calling Vector's coordinates by the specified amounts.
+         * @param x0
+         * 		the origin x shift.
+         * @param y0
+         * 		the origin y shift.
+         * @param x1
+         * 		the heading x shift.
+         * @param y1
+         * 		the heading y shift.
+         */
+        public void add(double x0, double y0, double x1, double y1) {
+        	startX += x0;
+        	startY += y0;
+        	endX += x1;
+        	endY += y1;
         }
 
         /**
