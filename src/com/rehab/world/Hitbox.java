@@ -96,8 +96,8 @@ public class Hitbox {
 				else max = max(max, proj);
 			}
 			// Measure the min and max differences
-			if (i == 0) mWidth = Math.abs(max.endX - min.endX);
-			else mHeight = Math.abs(max.endY - min.endY);
+			if (i == 0) mWidth = Math.abs(max.getEndX() - min.getEndX());
+			else mHeight = Math.abs(max.getEndY() - min.getEndY());
 		}
 	}
 
@@ -179,9 +179,9 @@ public class Hitbox {
 				return null;
 
 			// Measure minimum separation distance so far
-			if (minSeparation == null) minSeparation = new Vector(Math.abs(maxEdge.endX - otherMinEdge.endX), Math.abs(maxEdge.endY - otherMinEdge.endY));
+			if (minSeparation == null) minSeparation = new Vector(Math.abs(maxEdge.getEndX() - otherMinEdge.getEndX()), Math.abs(maxEdge.getEndY() - otherMinEdge.getEndY()));
 			else {
-				Vector overlap = new Vector(Math.abs(maxEdge.endX - otherMinEdge.endX), Math.abs(maxEdge.endY - otherMinEdge.endY));
+				Vector overlap = new Vector(Math.abs(maxEdge.getEndX() - otherMinEdge.getEndX()), Math.abs(maxEdge.getEndY() - otherMinEdge.getEndY()));
 				minSeparation = min(minSeparation, overlap);
 			}
 		}
@@ -210,9 +210,11 @@ public class Hitbox {
 	 * 		the minimum Edge.
 	 */
 	private Vector min(Vector e0, Vector e1) {
-		if (e0.endY < e1.endY) return e0;
-		else if (e0.endY > e1.endY) return e1;
-		else if (e0.endX < e1.endX) return e0;
+		double endX0 = e0.getEndX(), endY0 = e1.getEndY();
+		double endX1 = e1.getEndX(), endY1 = e1.getEndY();
+		if (endY0 < endY1) return e0;
+		else if (endY0 > endY1) return e1;
+		else if (endX0 < endX1) return e0;
 		else return e1;
 	}
 
@@ -226,9 +228,11 @@ public class Hitbox {
 	 * 		the maximum Edge.
 	 */
 	private Vector max(Vector e0, Vector e1) {
-		if (e0.endY > e1.endY) return e0;
-		else if (e0.endY < e1.endY) return e1;
-		else if (e0.endX > e1.endX) return e0;
+		double endX0 = e0.getEndX(), endY0 = e1.getEndY();
+		double endX1 = e1.getEndX(), endY1 = e1.getEndY();
+		if (endY0 > endY1) return e0;
+		else if (endY0 < endY1) return e1;
+		else if (endX0 > endX1) return e0;
 		else return e1;
 	}
 
@@ -245,9 +249,10 @@ public class Hitbox {
 	 * @return
 	 */
 	private double project(boolean calcX, Vector edge, Vector axis) {
-		double normCoord = axis.endX;
-		if (!calcX) normCoord = axis.endY;
-		return ((edge.endX * axis.endX) + (edge.endY * axis.endY)) * normCoord;
+		double axisEndX = axis.getEndX(), axisEndY = axis.getEndY();
+		double normCoord = axisEndX;
+		if (!calcX) normCoord = axisEndY;
+		return ((edge.getEndX() * axisEndX) + (edge.getEndY() * axisEndY)) * normCoord;
 	}
 
 	/**
@@ -261,15 +266,10 @@ public class Hitbox {
 	public void moveTo(double x, double y) {
 		// Calculate coordinate shift needed
 		Vector originEdge = mEdges.get(0);
-		double changeX = x - originEdge.endX;
-		double changeY = y - originEdge.endY;
+		double changeX = x - originEdge.getX();
+		double changeY = y - originEdge.getY();
 		// Shift all edge's points
-		for (Vector e : mEdges) {
-			e.startX += changeX;
-			e.startY += changeY;
-			e.endX += changeX;
-			e.endY += changeY;
-		}
+		moveBy(changeX, changeY);
 	}
 
 	/**
@@ -283,12 +283,7 @@ public class Hitbox {
 	 */
 	public void moveBy(double x, double y) {
 		// Shift the coordinates of all Edges
-		for (Vector e : mEdges) {
-			e.startX += x;
-			e.startY += y;
-			e.endX += x;
-			e.endY += y;
-		}
+		for (Vector e : mEdges) e.add(x, y, x, y);
 	}
 
 	/**
