@@ -6,10 +6,16 @@ public interface Drawable {
 	
 	double getY ();
 	
+	double getWidth();
+	
+	double getHeight();
+	
 	Sprite getSprite();
 	
 	void setSprite(Sprite s); 
 	
 	double getZ(); 
+	
+	void onClick();
 	
 }
