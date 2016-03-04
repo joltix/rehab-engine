@@ -40,8 +40,15 @@ public class Sprite {
 		return image;
 
 	}
+	
+	public void draw(GraphicsContext g, double x, double y) { draw(g, x, y, true); }
 
-	public void draw(GraphicsContext g, int x, int y) { g.drawImage(buffer, x, y); }
+	public void draw(GraphicsContext g, double x, double y, boolean convertCoords) {
+		// Convert to standard cartesian
+		if (convertCoords) y = 480 - y;
+		g.drawImage(buffer, x, y);
+		
+	}
 
 	public void setId(int i) { id = i; }
 	
