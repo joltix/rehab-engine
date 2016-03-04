@@ -17,7 +17,7 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	// Stats
 	private double mHealth;
 	private double mMaxHealth;
-	
+
 	// Flags
 	private boolean mVisible;
 
@@ -61,6 +61,21 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	}
 
 	/**
+	 * Moves the Entity by some x and y values. Unlike moveTo(), this method shifts
+	 * an Entity instead of snapping to a specific location. Calling this method will
+	 * move the instance to the given coordinates but will erase direction and speed.
+	 * The instance will relocate standing still.
+	 * @param x
+	 * 		the x value to shift by.
+	 * @param y
+	 * 		the y value to shift by.
+	 */
+	public void moveBy(double x, double y) {
+		mPhys.moveTo(mPhys.getX() + x, mPhys.getX() + y, false);
+		syncModels();
+	}
+
+	/**
 	 * Synchronizes the x and y coordinates of the collision model with the physics
 	 * model.
 	 */
@@ -68,7 +83,7 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 		// Sync collision model
 		if (mCollision != null) mCollision.moveTo(mPhys.getX(), mPhys.getY());
 	}
-	
+
 	/**
 	 * Gets the instance's amount of health. The health will be between 0 and the
 	 * maximum health set by a call to setMaximumHealth().
@@ -157,7 +172,7 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 * 		the unique identifier for the instance.
 	 */
 	public void setId(int id) { mInstanceId = id; }
-	
+
 	/**
 	 * Gets the instance's x coordinate.
 	 * @return
@@ -200,7 +215,7 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 * 		speed in meters per second.
 	 */
 	public double getSpeed() { return mPhys.getSpeed(); }
-	
+
 	/**
 	 * Sets the instance's speed. Changing speed will result in a faster travel
 	 * in the same direction as any previous heading.
@@ -223,7 +238,7 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 *		otherwise.
 	 */
 	public boolean isGravityEnabled() { return mPhys.isGravityEnabled(); }
-	
+
 	/**
 	 * Sets whether or not the Entity should be pulled to the source of gravity.
 	 * @param hasContact
@@ -231,7 +246,7 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 *		enable gravity.
 	 */
 	public void setEnableGravity(boolean gravityEnabled) { mPhys.setEnableGravity(gravityEnabled); }
-	
+
 	/**
 	 * Checks whether or not the Entity should be drawn on-screen.
 	 * @return
@@ -245,5 +260,5 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 * 		true if the instance should be drawn, false otherwise.
 	 */
 	public void setVisibility(boolean visible) { mVisible = visible; }
-	
+
 }
