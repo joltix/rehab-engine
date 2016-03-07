@@ -7,10 +7,13 @@ public class CircularArray<E> extends ArrayList<E> {
 	@Override
 	public E get(int index) {
 		// TODO Auto-generated method stub
-		if(index < 0) //if the index we want to get is less than zero
-						//then set index to be index+size
-	        index = index + size();
-		else if(index == size()) index=0; 
+		//if the index we want to get is less than zero
+		//then set index to be index+size
+		if(index < 0) {  index = index + size();}
+	      
+		else if(index == size()) {index=0; }
+		
+		else if (index>size()){index=index-size();}
 
 		return super.get(index);
 	}
