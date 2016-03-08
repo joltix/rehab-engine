@@ -8,4 +8,8 @@ public interface Drawable {
 	
 	Sprite getSprite();
 	
+	void setSprite(Sprite s); 
+	
+	double getZ(); 
+	
 }
