@@ -1,7 +1,12 @@
 package com.rehab.world;
 
 
+import java.util.LinkedList;
+
+import com.rehab.animation.Drawable;
 import com.rehab.animation.Sprite;
+import com.rehab.user.Mouse;
+import com.rehab.user.Movement;
 
 import javafx.application.Application;
 import javafx.scene.Group;
@@ -21,11 +26,20 @@ public class Main extends Application {
 	public void start(Stage primaryStage) throws Exception {
 		// Prep and display the window
 		Canvas canvas = setupWindow(primaryStage);
-		
+				
 		// The test components
-		initGameObj();
+		Actor player = initGameObj();
 		initFloor();
 		Arena lvl = initLevel();
+		
+		// Setup keyboard control
+		Movement move = new Movement(canvas, player);
+		LinkedList<Drawable> drawables = new LinkedList<Drawable>();
+		for (Entity e : InstanceManager.getInstance().getLoadedEntities())
+			drawables.add(e);
+		
+		// Setup mouse control
+		Mouse mouse = new Mouse(canvas, drawables);
 		
 		// The logic and draw loops
 		WorldLoop world = WorldLoop.getInstance(60, lvl);
