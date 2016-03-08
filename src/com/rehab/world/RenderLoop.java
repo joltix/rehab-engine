@@ -147,20 +147,13 @@ public class RenderLoop extends Thread {
 	 * 		the PixelWriter of the buffer.
 	 */
 	private void drawToBuffer(Drawable obj, PixelWriter writer) {
-		// Needed components
-		Sprite sprite = obj.getSprite();
-		PixelReader reader = sprite.getPixelReader();
-
+		
 		// Get location offset relative to overall screen
 		int offX = (int) obj.getX();
 		int offY = (int) (480 - obj.getY());
-				
-		// Transfer pixels to buffer
-		for (int x = 0, w = (int) sprite.getWidth(); x < w; x++) {
-			for (int y = 0, h = (int) sprite.getHeight(); y < h; y++) {
-				writer.setArgb(offX + x, offY + y, reader.getArgb(x, y));
-			}
-		}
+		
+		obj.getSprite().draw(writer, offX, offY);
+
 	}
 
 	
