@@ -1,8 +1,8 @@
 package com.rehab.animation;
 
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
+import javafx.scene.image.PixelWriter;
 
 public class Sprite {
 
@@ -40,15 +40,18 @@ public class Sprite {
 		return image;
 
 	}
-	
-	public void draw(GraphicsContext g, double x, double y) { draw(g, x, y, true); }
-
-	public void draw(GraphicsContext g, double x, double y, boolean convertCoords) {
-		// Convert to standard cartesian
-		if (convertCoords) y = 480 - y;
-		g.drawImage(buffer, x, y);
+		
+	public void draw(PixelWriter writer, int offsetX, int offsetY) {
+		PixelReader reader = buffer.getPixelReader();
+		
+		// Transfer pixels to the buffer's writer
+		for (int x = 0, w = (int) getWidth(); x < w; x++)
+			for (int y = 0, h = (int) getHeight(); y < h; y++)
+				writer.setArgb(offsetX + x, offsetY + y, reader.getArgb(x, y));
 		
 	}
+	
+	public PixelReader getPixelReader() { return buffer.getPixelReader(); }
 
 	public void setId(int i) { id = i; }
 	
