@@ -27,7 +27,7 @@ public class LayerManager {
 	 * 		the Drawable instance.
 	 */
 	public void add(Drawable drawable) {
-		int z = (int) drawable.getX();
+		int z = drawable.getZ();
 		// Create the head Layerable or append to the end of the list
 		if (mLayers[z] == null) mLayers[z] = new LinkedList<Drawable>();
 		else mLayers[z].add(drawable);
