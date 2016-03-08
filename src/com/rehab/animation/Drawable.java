@@ -10,6 +10,6 @@ public interface Drawable {
 	
 	void setSprite(Sprite s); 
 	
-	double getZ(); 
+	int getZ();
 	
 }
