@@ -43,5 +43,11 @@ public class Projectile extends Entity implements Combatant {
 	public enum Damage {
 		DEFAULT, AREA, CHAIN
 	}
+
+	@Override
+	public int getZ() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 	
 }

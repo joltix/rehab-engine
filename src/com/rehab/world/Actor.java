@@ -38,5 +38,11 @@ public class Actor extends Entity implements Combatant {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public int getZ() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 	
 }
