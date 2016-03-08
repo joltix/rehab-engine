@@ -55,7 +55,7 @@ public class Phys {
      * @param y
      * 		the y coordinate shift.
      */
-    private void moveBy(double x, double y) {
+    public void moveBy(double x, double y) {
     	// Save velocity
     	mLastVelocity.updateFrom(mVelocity);
     	
