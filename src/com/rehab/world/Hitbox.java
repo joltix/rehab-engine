@@ -40,9 +40,9 @@ public class Hitbox {
 		mHeight = h;
 		// Build out the edges
 		mEdges.add(new Vector(x, y, x + w, y));
-		mEdges.add(new Vector(x + w, y, x + w, y + h));
-		mEdges.add(new Vector(x + w, y + h, x, y + h));
-		mEdges.add(new Vector(x, y + h, x, y));
+		mEdges.add(new Vector(x + w, y, x + w, y - h));
+		mEdges.add(new Vector(x + w, y - h, x, y - h));
+		mEdges.add(new Vector(x, y - h, x, y));
 	}
 
 	/**
@@ -209,8 +209,8 @@ public class Hitbox {
 	 * @return
 	 * 		the minimum Edge.
 	 */
-	private Vector min(Vector e0, Vector e1) {
-		double endX0 = e0.getEndX(), endY0 = e1.getEndY();
+	private static Vector min(Vector e0, Vector e1) {
+		double endX0 = e0.getEndX(), endY0 = e0.getEndY();
 		double endX1 = e1.getEndX(), endY1 = e1.getEndY();
 		if (endY0 < endY1) return e0;
 		else if (endY0 > endY1) return e1;
@@ -227,8 +227,8 @@ public class Hitbox {
 	 * @return
 	 * 		the maximum Edge.
 	 */
-	private Vector max(Vector e0, Vector e1) {
-		double endX0 = e0.getEndX(), endY0 = e1.getEndY();
+	private static Vector max(Vector e0, Vector e1) {
+		double endX0 = e0.getEndX(), endY0 = e0.getEndY();
 		double endX1 = e1.getEndX(), endY1 = e1.getEndY();
 		if (endY0 > endY1) return e0;
 		else if (endY0 < endY1) return e1;
@@ -248,7 +248,7 @@ public class Hitbox {
 	 * 		the Edge whose end point represents the axis to project to.
 	 * @return
 	 */
-	private double project(boolean calcX, Vector edge, Vector axis) {
+	private static double project(boolean calcX, Vector edge, Vector axis) {
 		double axisEndX = axis.getEndX(), axisEndY = axis.getEndY();
 		double normCoord = axisEndX;
 		if (!calcX) normCoord = axisEndY;
@@ -299,4 +299,5 @@ public class Hitbox {
 	 * 		the height in pixels.
 	 */
 	public double getHeight() { return mHeight; }
+
 }
