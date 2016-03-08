@@ -1,6 +1,5 @@
 package com.rehab.user;
 
-import java.util.LinkedList;
 
 import com.rehab.animation.Drawable;
 
@@ -13,7 +12,7 @@ import javafx.scene.input.MouseEvent;
  */
 public class Mouse {
 
-	LinkedList<Drawable> coordinates;
+	Iterable<Drawable> coordinates;
 
 	/**
 	 * Constructor to initialize a linked list of Drawable objects and capture
@@ -21,8 +20,8 @@ public class Mouse {
 	 * 
 	 * @param canvas
 	 */
-	public Mouse(Canvas canvas) {
-		coordinates = new LinkedList<Drawable>();
+	public Mouse(Canvas canvas, Iterable<Drawable> drawables) {
+		coordinates = drawables;
 		canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent click) {
@@ -39,14 +38,16 @@ public class Mouse {
 	 * @param yMouse
 	 */
 	public void iterate(double xMouse, double yMouse) {
-		for (int i = 0; i < coordinates.size(); i++) {
-			Drawable draw = coordinates.get(i);
+		// Convert mouse coordinates to bottom left origin
+		yMouse = 480 - yMouse;
+		
+		for (Drawable draw : coordinates) {
 			double x = draw.getX();
 			double y = draw.getY();
 			double width = draw.getWidth();
 			double height = draw.getHeight();
 			if (xMouse > x && xMouse < width + x) {
-				if (yMouse > y && yMouse < height + y) {
+				if (yMouse <= y && yMouse >= y - height) {
 					draw.onClick();
 				}
 			}
