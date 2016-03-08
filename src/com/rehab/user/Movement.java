@@ -29,50 +29,17 @@ public class Movement {
 		canvas.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent click) {
-				if (click.getCode() == KeyCode.UP) {
-					character.moveBy(0, 1);
-					System.out.println(click.getCode());
-					System.out.println(character.getX());
-					System.out.println(character.getY());
+				if (click.getCode() == KeyCode.RIGHT) {
+					character.moveBy(5, 0);
 				}
 			}
 		});
 
-		canvas.setFocusTraversable(true);
-		canvas.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
-			@Override
-			public void handle(KeyEvent click) {
-				if (click.getCode() == KeyCode.DOWN) {
-					character.moveBy(0, -1);
-					System.out.println(click.getCode());
-					System.out.println(character.getX());
-					System.out.println(character.getY());
-				}
-			}
-		});
-
-		canvas.setFocusTraversable(true);
 		canvas.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent click) {
 				if (click.getCode() == KeyCode.LEFT) {
-					character.moveBy(-1, 0);
-					System.out.println(click.getCode());
-					System.out.println(character.getX());
-					System.out.println(character.getY());
-				}
-			}
-		});
-
-		canvas.setFocusTraversable(true);
-		canvas.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
-			@Override
-			public void handle(KeyEvent click) {
-				if (click.getCode() == KeyCode.RIGHT) {
-					character.moveBy(1, 0);
-					System.out.println(click.getCode());
-					System.out.println(character.getX());
-					System.out.println(character.getY());
+					character.moveBy(-5, 0);
 				}
 			}
 		});
