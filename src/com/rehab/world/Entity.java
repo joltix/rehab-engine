@@ -83,6 +83,25 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 		// Sync collision model
 		if (mCollision != null) mCollision.moveTo(mPhys.getX(), mPhys.getY());
 	}
+	
+	public boolean collidesWith(Entity e) {
+		if (mCollision == null || e.mCollision == null) return false;
+		return mCollision.collidesWith(e.mCollision);
+	}
+	
+	public boolean separate() {
+		if (mCollision == null) return false;
+		Vector heading = mPhys.getHeading();
+		// Reverse and scale the heading's length for separation
+		heading.reverse();	
+		double sepDist = mCollision.getSeparationDistance();
+		heading.changeMagnitude(sepDist);
+		heading.rebase(mPhys.getX(), mPhys.getY());
+		
+		// Move
+		moveTo(heading.getEndX(), heading.getEndY());
+		return true;
+	}
 
 	/**
 	 * Gets the instance's amount of health. The health will be between 0 and the
@@ -194,8 +213,10 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 * 		width in pixels.
 	 */
 	public double getWidth() {
-		if (mCollision == null) return 0;
-		return mCollision.getWidth();
+		if (mCollision == null)
+			if (mSprite == null) return 0;
+			else return mSprite.getWidth();
+		else return mCollision.getWidth();
 	}
 
 	/**
@@ -205,8 +226,10 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 * 		height in pixels.
 	 */
 	public double getHeight() {
-		if (mCollision == null) return 0;
-		return mCollision.getHeight();
+		if (mCollision == null)
+			if (mSprite == null) return 0;
+			else return mSprite.getHeight();
+		else return mCollision.getHeight();
 	}
 
 	/**
