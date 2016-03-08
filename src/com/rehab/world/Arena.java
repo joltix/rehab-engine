@@ -6,6 +6,9 @@ public class Arena {
 
 	// Playable bounds on-screen
 	private double mWidth, mHeight;
+	// Percentage of a real second as the game's smallest unit of time
+	private double mUnitTime;
+	
 	// Entities to keep track of (those in the level)
 	private Iterable<Entity> mEntities;
 	// Title of the level
@@ -13,10 +16,6 @@ public class Arena {
 	// Default gravity is at Earth level
 	private Vector mGrav;
 
-	/**
-	 * Prevents default instantiation
-	 */
-	@SuppressWarnings("unused") private Arena() {  }
 
 	/**
 	 * Constructor for a basic Arena.
@@ -38,6 +37,13 @@ public class Arena {
 		mGrav.updateFrom(Phys.UNIT_SOUTH);
 		mGrav.changeMagnitude(gravStrength);
 	}
+	
+	/**
+	 * Sets the unit of time to use for Entity physics.
+	 * @param tickRate
+	 * 		a fraction of a second.
+	 */
+	public void setTime(double tickRate) { mUnitTime = 1d / tickRate; }
 
 	/**
 	 * [INCOMPLETE] Calculates the level's current game state. This includes instance locations, health
@@ -50,11 +56,23 @@ public class Arena {
 		for (Entity e : mEntities) {
 
 			// Apply gravity
-			applyGravity(e);
-
+			if (e.isGravityEnabled()) {
+				applyGravity(e);
+				for (Entity other : mEntities) {
+					// Check collisions
+					if (e == other) continue;
+					if (e.collidesWith(other)) {
+						// Snap object to floor
+						e.moveTo(e.getX(), other.getY() + e.getHeight());
+						e.setEnableGravity(false);
+					}
+				}
+ 			}
+			
 			// Snap the character to the surface of the floor if sinks
 			if (isBelowScreen(e)) {
-				e.moveTo(e.getX(), 0);
+				double h = e.getHeight();
+				e.moveTo(e.getX(), h);
 				e.setEnableGravity(false);
 			}
 
@@ -67,8 +85,9 @@ public class Arena {
 	 * 		the Entity to affect.
 	 */
 	private void applyGravity(Entity e) {
-		Vector force = new Vector();
-		force.updateFrom(mGrav);
+		Vector force = new Vector(mGrav);
+		// Scale force by time
+		force.multiply(mUnitTime);
 		e.moveImpulse(force);
 	}
 
@@ -82,7 +101,7 @@ public class Arena {
 	private boolean isBelowScreen(Entity e) {
 		double y = e.getY();
 		double height = e.getHeight();
-		return (y + height) < 0;
+		return (y - height) < 0;
 	}
 
 	/**
