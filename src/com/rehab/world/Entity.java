@@ -71,7 +71,8 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 * 		the y value to shift by.
 	 */
 	public void moveBy(double x, double y) {
-		mPhys.moveTo(mPhys.getX() + x, mPhys.getX() + y, false);
+		mPhys.moveBy(x, y);
+		//mPhys.moveTo(mPhys.getX() + x, mPhys.getX() + y, false);
 		syncModels();
 	}
 
