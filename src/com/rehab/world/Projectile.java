@@ -49,5 +49,11 @@ public class Projectile extends Entity implements Combatant {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+	@Override
+	public void onClick() {
+		// TODO Auto-generated method stub
+		
+	}
 	
 }

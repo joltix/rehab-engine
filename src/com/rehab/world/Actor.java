@@ -44,5 +44,11 @@ public class Actor extends Entity implements Combatant {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+	@Override
+	public void onClick() {
+		System.out.println("Clicked!");
+		
+	}
 	
 }
