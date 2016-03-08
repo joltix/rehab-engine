@@ -48,7 +48,17 @@ public class Phys {
         mSpeed = mVelocity.getMagnitude();
     }
 
+    /**
+     * Moves the Phys instance by some x and y values.
+     * @param x
+     * 		the x coordinate shift.
+     * @param y
+     * 		the y coordinate shift.
+     */
     private void moveBy(double x, double y) {
+    	// Save velocity
+    	mLastVelocity.updateFrom(mVelocity);
+    	
     	mVelocity.startX += x;
     	mVelocity.startY += y;
     	mVelocity.endX += x;
@@ -68,6 +78,9 @@ public class Phys {
 	 * 		false otherwise.
 	 */
     public void moveTo(double x, double y, boolean conserveVelocity) {
+    	// Save vals as previous
+    	mLastVelocity.updateFrom(mVelocity);
+    	
         // Keep velocity after relocation
         if (conserveVelocity) {
         	mVelocity.endX += x - mVelocity.endX;
@@ -96,6 +109,14 @@ public class Phys {
 	 */
     public double getY() { return mVelocity.startY; }
 
+    /**
+     * Gets a unit Vector representing the current heading of the
+     * Phys instance.
+     * @return
+     * 		the unit Vector.
+     */
+    public Vector getHeading() { return mVelocity.getUnitVector(); }
+    
 	/**
 	 * Gets the instance's mass.
 	 * @return
@@ -155,9 +176,9 @@ public class Phys {
          * passed in to this constructor can be retrieved via access
          * to the corresponding "end" variables.
          * @param x
-         * 		the x coordinate defining direction.
+         * 		the x coordinate defining heading.
          * @param y
-         * 		the y coordinate defining direction.
+         * 		the y coordinate defining heading.
          */
         public Vector(double x, double y) {
             endX = x;
@@ -264,6 +285,22 @@ public class Phys {
             endX = startX + (unitV.endX - unitV.startX);
             endY = startY + (unitV.endY - unitV.startY);
         }
+        
+        /**
+         * Changes the starting coordinates to the given x and y value. The
+         * heading coordinates will also relocate to maintain the
+         * magnitude of the Vector.
+         * @param x
+         * 		the new x location.
+         * @param y
+         * 		the new y location.
+         */
+        public void rebase(double x, double y) {
+        	endX += x - startX;
+        	endY += y - startY;
+        	startX = x;
+        	startY = y;
+        }
 
         /**
          * Gets a unit vector based off of the calling instance's heading. If
@@ -304,13 +341,37 @@ public class Phys {
          * 		the normal's y coordinate.
          */
         public double getNormalY() { return (endX - startX); }
-
+        
+        /**
+         * Gets the x location.
+         * @return
+         * 		the x coordinate.
+         */
         public double getX() { return startX; }
 
+        /**
+         * Gets the y location.
+         * @return
+         * 		the y coordinate.
+         */
         public double getY() { return startY; }
 
+        /**
+         * Gets the x coordinate denoting the heading of the Vector. That is,
+         * this method returns the x coordinate that is not the starting
+         * point for this Vector.
+         * @return
+         * 		the x heading.
+         */
         public double getEndX() { return endX; }
 
+        /**
+         * Gets the y coordinate denoting the heading of the Vector. That is,
+         * this method returns the y coordinate that is not the starting
+         * point for this Vector.
+         * @return
+         * 		the y heading.
+         */
         public double getEndY() { return endY; }
     }
 
