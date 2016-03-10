@@ -9,13 +9,14 @@ public class Arena {
 	// Percentage of a real second as the game's smallest unit of time
 	private double mUnitTime;
 	
-	// Entities to keep track of (those in the level)
-	private Iterable<Entity> mEntities;
 	// Title of the level
 	private String mName;
 	// Default gravity is at Earth level
 	private Vector mGrav;
 
+	// Entities to keep track of (those in the level)
+	private Iterable<Entity> mEntities;
+	private Actor mPlayer;
 
 	/**
 	 * Constructor for a basic Arena.
@@ -55,6 +56,10 @@ public class Arena {
 	public void step() {
 		for (Entity e : mEntities) {
 
+			// Disable objects beyond the screen
+			if (isOutside(e))
+				disable(e);
+			
 			// Apply gravity
 			if (e.isGravityEnabled()) {
 				applyGravity(e);
@@ -70,7 +75,7 @@ public class Arena {
  			}
 			
 			// Snap the character to the surface of the floor if sinks
-			if (isBelowScreen(e)) {
+			if (isBelow(e)) {
 				double h = e.getHeight();
 				e.moveTo(e.getX(), h);
 				e.setEnableGravity(false);
@@ -92,16 +97,43 @@ public class Arena {
 	}
 
 	/**
-	 * Checks whether or not an Entity is below the screen.
+	 * Checks whether or not an Entity is below the Arena's boundaries.
 	 * @param e
 	 * 		the Entity whose location must be checked.
 	 * @return
-	 * 		true if the Entity is below screen, false otherwise.
+	 * 		true if the Entity is below the Arena, false otherwise.
 	 */
-	private boolean isBelowScreen(Entity e) {
+	private boolean isBelow(Entity e) {
 		double y = e.getY();
 		double height = e.getHeight();
 		return (y - height) < 0;
+	}
+	
+	/**
+	 * Checks whether or not a given Entity is beyond the Arena's boundaries.
+	 * @param e
+	 * 		the Entity to check for.
+	 * @return
+	 * 		true if the Entity is outside the Arena, false otherwise.
+	 */
+	private boolean isOutside(Entity e) {
+		double x = e.getX(), y = e.getY();
+		if (x + e.getWidth() < 0 || x > mWidth || y - e.getHeight() > mHeight || y < 0)
+			return true;
+		return false;
+	}
+	
+	/**
+	 * Sets the Entity to no longer be drawn, disables gravity, and unloads the
+	 * instance with the InstanceManager.
+	 * @param e
+	 * 		the Entity to disable.
+	 */
+	private void disable(Entity e) {
+		e.setVisibility(false);
+		e.setEnableGravity(false);
+		// Take it out of the game
+		InstanceManager.getInstance().unload(e);
 	}
 
 	/**
@@ -135,7 +167,21 @@ public class Arena {
 	 * 		an Iterable of Entities in the level.
 	 */
 	public void setEntities(Iterable<Entity> iter) { mEntities = iter; }
-
+	
+	/**
+	 * Gets the user-controlled Actor.
+	 * @return
+	 * 		the Actor representing the user.
+	 */
+	public Actor getPlayer() { return mPlayer; }
+	
+	/**
+	 * Sets the Actor to be controlled by the user.
+	 * @param player
+	 * 		the user's Actor.
+	 */
+	public void setPlayer(Actor player) { mPlayer = player; }
+	
 	/**
 	 * Gets the width of the playable area.
 	 * @return
