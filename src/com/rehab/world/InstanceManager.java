@@ -1,5 +1,6 @@
 package com.rehab.world;
 import java.util.Hashtable;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class InstanceManager {
 
@@ -15,6 +16,8 @@ public class InstanceManager {
 	// Tables to categorize instance statuses
 	private Hashtable<Integer, Entity> mLoadedInstanceTable = new Hashtable<Integer, Entity>();
 	private Hashtable<Integer, Entity> mWaitingInstanceTable = new Hashtable<Integer, Entity>();
+	
+	private ConcurrentLinkedQueue<Entity> mLoadedCC = new ConcurrentLinkedQueue<Entity>();
 	
 	
 	/**
@@ -55,6 +58,14 @@ public class InstanceManager {
 			// Add to global list and buffer list
 			mGlobalInstanceTable.put(id, e);
 			mWaitingInstanceTable.put(id, e);
+			// Ingame lists
+			mLoadedInstanceTable.put(id, e);
+			mLoadedCC.add(e);
+			
+			// Auto load into game if already began
+			if (RenderLoop.isRunning())
+				RenderLoop.getInstance().addDrawable(e);
+			
 			return true;
 		}
 	}
@@ -94,7 +105,7 @@ public class InstanceManager {
 		synchronized (mManager) {
 			int id = e.getId();
 			if (!mWaitingInstanceTable.containsKey(id)) return false;
-			mLoadedInstanceTable.put(id, e);		
+			mLoadedInstanceTable.put(id, e);
 			return true;
 		}
 	}
@@ -145,7 +156,9 @@ public class InstanceManager {
 	 * @return
 	 * 		the Iterable of Entities.
 	 */
-	public Iterable<Entity> getLoadedEntities() { return mLoadedInstanceTable.values(); }
+	public Iterable<Entity> getLoadedEntities() {
+		return mLoadedCC;
+	}
 	
 	/**
 	 * Creates an instance id to be used when registering an
