@@ -2,6 +2,8 @@ package com.rehab.user;
 
 
 import com.rehab.animation.Drawable;
+import com.rehab.world.Actor;
+import com.rehab.world.Entity;
 
 import javafx.event.EventHandler;
 import javafx.scene.canvas.Canvas;
@@ -13,19 +15,27 @@ import javafx.scene.input.MouseEvent;
 public class Mouse {
 
 	Iterable<Drawable> coordinates;
+	
+	private Actor mPlayer;
 
 	/**
 	 * Constructor to initialize a linked list of Drawable objects and capture
 	 * the click of the mouse.
 	 * 
 	 * @param canvas
+	 * @param drawables
+	 * @param player
 	 */
-	public Mouse(Canvas canvas, Iterable<Drawable> drawables) {
+	public Mouse(Canvas canvas, Iterable<Drawable> drawables, Actor player) {
 		coordinates = drawables;
+		mPlayer = player;
+		
 		canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent click) {
-				iterate(click.getX(), click.getY());
+				double xMouse = click.getX(), yMouse = 480 - click.getY();
+				iterate(xMouse, yMouse);
+				mPlayer.fireAt(xMouse, yMouse);
 			}
 		});
 	}
@@ -38,8 +48,6 @@ public class Mouse {
 	 * @param yMouse
 	 */
 	public void iterate(double xMouse, double yMouse) {
-		// Convert mouse coordinates to bottom left origin
-		yMouse = 480 - yMouse;
 		
 		for (Drawable draw : coordinates) {
 			double x = draw.getX();
