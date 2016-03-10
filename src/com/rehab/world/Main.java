@@ -16,7 +16,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-
 	
 	public static void main(String[] args) {
 		Application.launch(args);
@@ -30,7 +29,8 @@ public class Main extends Application {
 		// The test components
 		Actor player = initGameObj();
 		initFloor();
-		Arena lvl = initLevel();
+		Arena lvl = initLevel(player);
+		
 		
 		// Setup keyboard control
 		Movement move = new Movement(canvas, player);
@@ -39,12 +39,12 @@ public class Main extends Application {
 			drawables.add(e);
 		
 		// Setup mouse control
-		Mouse mouse = new Mouse(canvas, drawables);
+		Mouse mouse = new Mouse(canvas, drawables, player);
 		
 		// The logic and draw loops
 		WorldLoop world = WorldLoop.getInstance(60, lvl);
 		RenderLoop render = RenderLoop.getInstance(60, canvas);
-		
+
 		// Prep game objs then draw
 		render.reloadLayers();
 		render.start();
@@ -53,7 +53,7 @@ public class Main extends Application {
 		world.start();
 		
 	}
-	
+		
 	/**
 	 * Sets up the game Window and displays it for visualizing the game's
 	 * state.
@@ -73,11 +73,14 @@ public class Main extends Application {
 	
 	/**
 	 * Sets up the test Arena.
+	 * @param player
+	 * 		the Actor representing the player.
 	 * @return
 	 * 		the Arena.
 	 */
-	private Arena initLevel() {
+	private Arena initLevel(Actor player) {
 		Arena arena = new Arena("BASIC-TEST", 720, 480);
+		arena.setPlayer(player);
 		arena.setEntities(InstanceManager.getInstance().getLoadedEntities());
 		return arena;
 	}
