@@ -45,9 +45,14 @@ public class Sprite {
 		PixelReader reader = buffer.getPixelReader();
 		
 		// Transfer pixels to the buffer's writer
-		for (int x = 0, w = (int) getWidth(); x < w; x++)
-			for (int y = 0, h = (int) getHeight(); y < h; y++)
-				writer.setArgb(offsetX + x, offsetY + y, reader.getArgb(x, y));
+		for (int x = 0, w = (int) getWidth(); x < w; x++) {
+			for (int y = 0, h = (int) getHeight(); y < h; y++) {
+				int realX = offsetX + x, realY = offsetY + y;
+				// Draw the pixels only if its within the screen
+				if (realX >= 0 && realX < 720 && realY >= 0 && realY < 480)
+					writer.setArgb(offsetX + x, offsetY + y, reader.getArgb(x, y));
+			}
+		}
 		
 	}
 	
