@@ -94,6 +94,18 @@ public class Phys {
         mVelocity.startX = x;
         mVelocity.startY = y;
     }
+    
+    /**
+     * Changes the Phys' speed to 0. That is, this Phys' velocity
+     * has its magnitude changed to 0.
+     */
+    public void clearSpeed() {
+    	mLastVelocity.updateFrom(mVelocity);
+    	// Remove the speed
+    	mVelocity.endX = mVelocity.startX;
+    	mVelocity.endY = mVelocity.startY;
+    	mSpeed = 0;
+    }
 
 	/**
 	 * Gets the instance's x coordinate.
