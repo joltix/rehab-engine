@@ -1,5 +1,8 @@
 package com.rehab.world;
 
+import com.rehab.animation.Sprite;
+import com.rehab.world.Phys.Vector;
+
 public class Actor extends Entity implements Combatant {
 
 	private OnDamageTakenListener mDamageTakenListener;
@@ -49,6 +52,20 @@ public class Actor extends Entity implements Combatant {
 	public void onClick() {
 		System.out.println("Clicked!");
 		
+	}
+
+	@Override
+	public void fireAt(double x, double y) {
+		// TODO Auto-generated method stub
+		Projectile proj = new Projectile(0.2, 5);
+		proj.setSprite(new Sprite("git_icon.jpg"));
+		
+		System.out.println("FIRING");
+		
+		Vector heading = new Vector(getX(), getY(), x, y);
+		heading.changeMagnitude(15);
+		InstanceManager.getInstance().register(proj);
+		proj.moveImpulse(heading);
 	}
 	
 }
