@@ -1,11 +1,11 @@
 package com.rehab.world;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import com.rehab.animation.Drawable;
-import com.rehab.animation.Sprite;
 
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 
@@ -27,6 +27,9 @@ public class RenderLoop extends Thread {
 	// Loop control
 	private boolean mLoop = true;
 	private long mTarRate, mInterval;
+	
+	// Drawing buffer for dynamically created game objects
+	private ConcurrentLinkedQueue<Drawable> mAddToDraw = new ConcurrentLinkedQueue<Drawable>();
 	
 	/**
 	 * Gets an instance of the RenderLoop. This method should only be used if getInstance(int, Canvas)
@@ -56,6 +59,16 @@ public class RenderLoop extends Thread {
 	}
 	
 	/**
+	 * Checks whether or not the RenderLoop has begun.
+	 * @return
+	 * 		true if the RenderLoop has begun, false otherwise.
+	 */
+	public static boolean isRunning() {
+		if (mInstance == null) return false;
+		return mInstance.isAlive();
+	}
+	
+	/**
 	 * Constructor for specifying a framerate and a drawing surface.
 	 * @param fps
 	 * 		the desired frames per second.
@@ -65,7 +78,7 @@ public class RenderLoop extends Thread {
 	private RenderLoop(int fps, Canvas c) {
 		mCanvas = c;
 		mGfx = mCanvas.getGraphicsContext2D();
-		
+		// Loop time control
 		mTarRate = fps;
 		mInterval = 1000000000 / mTarRate;
 	}
@@ -78,6 +91,18 @@ public class RenderLoop extends Thread {
 		for (Entity e : ents)
 			mLayers.add(e);
 	}
+	
+	/**
+	 * Adds a Drawable into the RenderLoop's drawing layers. The given Drawable will be
+	 * sent to a buffer to be drawn in the next draw frame.
+	 * 
+	 * This method is meant to be
+	 * called when a Drawable is created after RenderLoop has begun drawing and its
+	 * reloadLayers() has already been called.
+	 * @param drawable
+	 * 		the new Drawable to render.
+	 */
+	public void addDrawable(Drawable drawable) { mAddToDraw.add(drawable); }
 	
 	@Override
 	public void run() {
@@ -99,6 +124,10 @@ public class RenderLoop extends Thread {
 			Iterable<Drawable> layer = mLayers.getLayer(0);
 			for (Drawable obj : layer)
 				drawToBuffer(obj, writer);
+			
+			// Add new Drawables for next draw loop
+			for (Drawable toAdd : mAddToDraw)
+				mLayers.add(toAdd);
 			
 			
 			// Set the buffer to be displayed onscreen
@@ -153,7 +182,6 @@ public class RenderLoop extends Thread {
 		int offY = (int) (480 - obj.getY());
 		
 		obj.getSprite().draw(writer, offX, offY);
-
 	}
 
 	
