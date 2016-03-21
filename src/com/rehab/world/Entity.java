@@ -139,6 +139,22 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 			if (diff >= 0) mHealthIncreaseListener.onHealthIncrease(oldHealth, mHealth);
 			else mHealthDecreaseListener.onHealthDecrease(oldHealth, mHealth);
 	}
+	
+	/**
+	 * Sets the health decrease listener for the entity.
+	 * @param listener
+	 */
+	public void setOnHealthDecreaseListener(OnHealthDecreaseListener listener){
+		mHealthDecreaseListener = listener;
+	}
+	
+	/**
+	 * Sets the health increase listener for the entity.
+	 * @param listener
+	 */
+	public void setOnHealthIncreaseListener(OnHealthIncreaseListener listener){
+		mHealthIncreaseListener = listener;
+	}
 
 	/**
 	 * Sets the collision model to use for the Entity's collision reactions.
@@ -157,6 +173,13 @@ public abstract class Entity implements OnHealthIncreaseListener, OnHealthDecrea
 	 * 		the highest number of health points allowed.
 	 */
 	protected void setMaximumHealth(double maxHealth) { mMaxHealth = maxHealth; }
+	
+	/**
+	 * Gets the maximum health of the entity.
+	 * @return
+	 * 		the max health of the entity.
+	 */
+	public double getMaximumHealth() {return mMaxHealth;}
 
 	/**
 	 * Gets the instance's physics model.
