@@ -621,7 +621,7 @@ public class Hitbox {
 			return;
 		} else {
 			// Enforce 3 edge minimum
-			if (mEdges.size() <= 3) {
+			if (getType() == Type.POLYGON && mEdges.size() <= 3) {
 				throw new IllegalStateException("Polygons must have at least three edges");
 			}
 			
