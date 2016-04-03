@@ -1,7 +1,8 @@
 package com.rehab.world;
 
 import java.util.ArrayList;
-import com.rehab.world.Phys.Vector;
+
+import com.rehab.world.Vector2D.Point;
 
 /**
  * 
@@ -35,23 +36,23 @@ import com.rehab.world.Phys.Vector;
  * 
  * <p>
  * Constructors exist for some common shapes like a circle and a rectangle.
- * However, these constructors' produce Hitboxes with a finalized shape.
+ * However, these constructors' produce Hitboxes with a finalized shape and
+ * so {@link #addEdge(double, double, double, double)} will throw an exception.
  * </p>
- * 
- * <p><b>[note] This class has non-functioning code for {@link #collidesWith(Hitbox)}
- * involving circular Hitboxes</b></p>
  */
 public class Hitbox {
 
+	private static final int POLYGON_EDGE_LIMIT = 3;
+	
 	// Constants for two main axis
-	private static final Vector AXIS_HORIZONTAL = new Vector(1, 0);
-	private static final Vector AXIS_VERTICAL = new Vector(0, 1);
+	private static final Vector2D AXIS_HORIZONTAL = Vector2D.UNIT_EAST;
+	private static final Vector2D AXIS_VERTICAL = Vector2D.UNIT_NORTH;
 
 	// Polygonal edges (null if circle)
-	private ArrayList<Phys.Vector> mEdges;
+	private ArrayList<Vector2D> mEdges;
 
 	// Location and dimensions
-	private double mX, mY;
+	private Point mLocation = new Point(0, 0);
 	private double mWidth, mHeight;
 	
 	// Lock state to finalize shape
@@ -78,18 +79,17 @@ public class Hitbox {
 		}
 		
 		// Init
-		mEdges = new ArrayList<Vector>();
 		mType = Type.RECTANGLE;
 		mWidth = w;
 		mHeight = h;
-		mX = x;
-		mY = y;
-		// Build out the edges and finalize shape
-		mEdges = new ArrayList<Vector>();
-		mEdges.add(new Vector(x, y, x + w, y));
-		mEdges.add(new Vector(x + w, y, x + w, y - h));
-		mEdges.add(new Vector(x + w, y - h, x, y - h));
-		mEdges.add(new Vector(x, y - h, x, y));
+		mLocation.setX(x);
+		mLocation.setY(y);
+		// Build out the vertices and finalize shape
+		mEdges = new ArrayList<Vector2D>();
+		mEdges.add(new Vector2D(x, y, x + w, y));
+		mEdges.add(new Vector2D(x + w, y, x + w, y - h));
+		mEdges.add(new Vector2D(x + w, y - h, x, y - h));
+		mEdges.add(new Vector2D(x, y - h, x, y));
 		lock();
 	}
 
@@ -109,8 +109,8 @@ public class Hitbox {
 		mType = Type.CIRCLE;
 		mWidth = diameter;
 		mHeight = diameter;
-		mX = x;
-		mY = y;
+		mLocation.setX(x);
+		mLocation.setY(y);
 		lock();
 	}
 
@@ -123,7 +123,7 @@ public class Hitbox {
 	 * @see #addEdge(double, double, double, double)
 	 */
 	public Hitbox() {
-		mEdges = new ArrayList<Vector>();
+		mEdges = new ArrayList<Vector2D>();
 		mType = Type.POLYGON;
 	}
 
@@ -134,16 +134,15 @@ public class Hitbox {
 	 * @param h the Hitbox to clone.
 	 */
 	public Hitbox(Hitbox h) {
-		// Copy edges for non-circular
+		// Copy vertices for non-circular
 		if (h.getType() != Type.CIRCLE) {
-			mEdges = new ArrayList<Vector>();
-			for (Vector v : h.mEdges) {
-				mEdges.add(new Vector(v));
+			mEdges = new ArrayList<Vector2D>();
+			for (Vector2D v : h.mEdges) {
+				mEdges.add(new Vector2D(v));
 			}
 		}
 		// Copy all other values
-		mX = h.mX;
-		mY = h.mY;
+		mLocation = new Point(h.mLocation);
 		mWidth = h.mWidth;
 		mHeight = h.mHeight;
 		mLock = h.mLock;
@@ -151,12 +150,10 @@ public class Hitbox {
 	}
 
 	/**
-	 * Adds an edge to the collision model.
+	 * Adds a vertex to the collision model.
 	 * 
-	 * @param x0	the starting x-coordinate.
-	 * @param y0	the starting y-coordinate.
-	 * @param x1	the ending x-coordinate.
-	 * @param y1	the ending y-coordinate.
+	 * @param x	the starting x-coordinate.
+	 * @param y	the starting y-coordinate.
 	 * @throws IllegalStateException	if lock() has already been called
 	 * 									or the Hitbox was created with
 	 * 									an immutable constructor.
@@ -172,12 +169,22 @@ public class Hitbox {
 		}
 
 		// Update origin as top left corner
-		mX = Math.min(mX, x0);
-		mX = Math.min(mX, x1);
-		mY = Math.max(mY, y0);
-		mY = Math.max(mY, y1);
+		double currentX = mLocation.getX();
+		double currentY =  mLocation.getY();
+		
+		// Find origin's x
+		currentX = Math.min(currentX, x0);
+		currentX = Math.min(currentX, x1);
+		
+		// Find origin's y
+		currentY = Math.max(currentY, y0);
+		currentY = Math.max(currentY, y1);
+		
+		// Apply new origin
+		mLocation.setX(currentX);
+		mLocation.setY(currentY);
 
-		mEdges.add(new Vector(x0, y0, x1, y1));
+		mEdges.add(new Vector2D(x0, y0, x1, y1));
 	}
 
 	/**
@@ -190,32 +197,34 @@ public class Hitbox {
 	private void calculateDimensions() {
 		for (int i = 0; i < 2; i++) {
 			// Determine which axis to use
-			Vector axis = AXIS_HORIZONTAL;
+			Vector2D axis = AXIS_HORIZONTAL;
 			if (i == 1) axis = AXIS_VERTICAL;
 
-			Vector min = null, max = null;
-			for (Vector point : mEdges) {
+			Point min = null;
+			Point max = null;
+			for (Vector2D v : mEdges) {
 				// Calc projected point
-				Vector proj = new Vector(project(true, point, axis), project(false, point, axis));
+				Point projection = project(v, axis);
+				
 				// Figure min and max
-				if (min == null) min = proj;
-				else min = min(min, proj);
-				if (max == null) max = proj;
-				else max = max(max, proj);
+				if (min == null) min = projection;
+				else min = min(min, projection);
+				if (max == null) max = projection;
+				else max = max(max, projection);
 			}
 			// Measure the min and max differences
-			if (i == 0) mWidth = Math.abs(max.getEndX() - min.getEndX());
-			else mHeight = Math.abs(max.getEndY() - min.getEndY());
+			if (i == 0) mWidth = Math.abs(max.getX() - min.getX());
+			else mHeight = Math.abs(max.getY() - min.getY());
 		}
 	}
 
 	/**
 	 * Checks whether or not the Hitbox's boundary is overlapping with another Hitbox's.
-	 * @param	h		the Hitbox whose boundary must be checked for.
-	 * @return	true 	if this instance has collided with the specified Hitbox.
-	 * @throws 	IllegalArgumentException	if the given Hitbox is null or it is not
-	 * 										locked.
-	 * @throws	IllegalStateException		if the calling Hitbox is locked.
+	 * 
+	 * @param h	the Hitbox whose boundary must be checked for.
+	 * @throws IllegalArgumentException	if the given Hitbox is null or it is not
+	 * locked.
+	 * @throws IllegalStateException	if the calling Hitbox is locked.
 	 * @see #lock()
 	 * @see #isLocked()
 	 */
@@ -229,15 +238,18 @@ public class Hitbox {
 		if (!h.isLocked()) {
 			throw new IllegalArgumentException("Hitbox h must be locked");
 		}
-		boolean collides;
+		boolean collides = false;
 		// Polygon or rectangle vs
 		if (mType == Type.POLYGON || mType == Type.RECTANGLE) {
 			// Polygon vs circle
 			if (h.mType == Type.CIRCLE) {
-				collides = collisionCombo(this, h);
+				collides = collisionCombo(h, this);
 				// Polygon vs polygon or rectangle
 			} else {
 				collides = collisionPolygon(this, h);
+				if (!collides) {
+					collides = collisionPolygon(h, this);
+				}
 			}
 			// Circle vs
 		} else {
@@ -254,147 +266,107 @@ public class Hitbox {
 	}
 
 	/**
-	 * [NOTE] This method does not yet function correctly.
 	 * SAT implementation for circle-polygon collision.
 	 * 
-	 * @param	circle	the circular Hitbox.
-	 * @param	other	the polygonal Hitbox.
-	 * @return	true	if a collision occurred, false otherwise.
+	 * @param circle	the circular Hitbox.
+	 * @param other	the polygonal Hitbox.
+	 * @return true	if a collision occurred, false otherwise.
 	 */
 	private static boolean collisionCombo(Hitbox circle, Hitbox other) {
-		double halfDim = circle.mWidth / 2;
-		double centerX = circle.mX + halfDim;
-		double centerY = circle.mY - halfDim;
-
-		// Find polygon vertex closest to circle's center
-		double minX = 0;
-		double minY = 0;
-		double minDist = -1;
-		for (Vector edge : other.mEdges) {
-			double x = edge.getX();
-			double y = edge.getY();
-
-			// Figure shortest distance so far
-			double dist = distanceBetween(centerX, centerY, x, y);
-			if (minDist == -1) {
-				minDist = dist;
-				minX = x;
-				minY = y;
-			} else {
-				// Save closest vertex
-				minDist = Math.min(minDist, dist);
-				if (minDist == dist) {
-					minX = x;
-					minY = y;
-				}
+		
+		// Compute circle's center
+		double radius = circle.getWidth() / 2;
+		double centerX = circle.getX() + radius;
+		double centerY = circle.getY() - radius;
+		
+		// Find vertex of polygon closest to circle center
+		Point closestVertex = null;
+		double closestDist = 0;
+		for (Vector2D edge : other.mEdges) {
+			Point vertex = edge.getPoint();
+			double distTo = distanceBetween(centerX, centerY, vertex.getX(), vertex.getY());
+			
+			// Assign first vertex as closest
+			if (closestVertex == null) {
+				closestVertex = vertex;
+				closestDist = distTo;
+				// Closer vertex becomes closest so far
+			} else if (Math.min(closestDist, distTo) == distTo){
+				closestVertex = vertex;
+				closestDist = distTo;
 			}
 		}
-
-		// Use each edge to figure a normal as an axis
-		Vector axis = new Vector(centerX, centerY, minX, minY);
-
-		// Get min and max points of the circle's edge on axis
-		Vector minEdge = axis.getUnitVector();
-		minEdge.changeMagnitude(halfDim);
-		minEdge.rebase(centerX, centerY);
-		Vector maxEdge = new Vector(minEdge);
-		maxEdge.rebase(centerX, centerY);
-		minEdge.reverse();
-
-		Vector realMin = min(minEdge, maxEdge);
-		if (realMin == maxEdge) {
-			minEdge = maxEdge;
-			maxEdge = minEdge;
+		
+		// Build collision axis from circle center to closest polygon vertex
+		Vector2D centerToPolyAxis = new Vector2D(centerX, centerY, closestVertex.getX(), closestVertex.getY());
+		centerToPolyAxis.rebase(0, 0, true);
+		centerToPolyAxis.normalize();
+		
+		// Project circle's diameter onto axis
+		Vector2D radius0 = new Vector2D(centerToPolyAxis);
+		radius0.rebase(centerX, centerY, true);
+		radius0.changeMagnitude(radius);
+		Point edge0 = project(radius0, centerToPolyAxis);
+		Vector2D radius1 = new Vector2D(radius0);
+		radius1.reverse();
+		Point edge1 = project(radius1, centerToPolyAxis);
+		
+		// Figure which circle projection is bigger / smaller than other
+		Point cirMin = edge0, cirMax = edge1;
+		if (min(cirMin, cirMax) == cirMax) {
+			cirMin = edge1;
+			cirMax = edge0;
 		}
-
-		// Figure the other hitbox's projections
-		Vector otherMinEdge = null,
-				otherMaxEdge = null;
-		for (Vector otherProj : other.mEdges) {
-			double otherProjX = project(true, otherProj, axis);
-			double otherProjY = project(false, otherProj, axis);
-			Vector otherProjEdge = new Vector(otherProjX, otherProjY);
-
+		
+		// Figure the polygon's projections onto center-poly axis
+		Point minPolyVertex = null;
+		Point maxPolyVertex = null;
+		for (Vector2D vertex1 : other.mEdges) {
+			Vector2D vert1 = new Vector2D(vertex1);
+			Point proj1 = project(vert1, centerToPolyAxis);
+			
 			// Figure min projection
-			if (otherMinEdge == null) otherMinEdge = otherProjEdge;
-			else otherMinEdge = min(otherMinEdge, otherProjEdge);
+			if (minPolyVertex == null) minPolyVertex = proj1;
+			else minPolyVertex = min(minPolyVertex, proj1);
 			// Figure max projection
-			if (otherMaxEdge == null) otherMaxEdge = otherProjEdge;
-			else otherMaxEdge = max(otherMaxEdge, otherProjEdge);
-
+			if (maxPolyVertex == null) maxPolyVertex = proj1;
+			else maxPolyVertex = max(maxPolyVertex, proj1);
 		}
 
 		// Bail out if gap is found
-		if (min(maxEdge, otherMinEdge) == maxEdge ||
-				min(otherMaxEdge, minEdge) == otherMaxEdge)
+		if (min(cirMax, minPolyVertex) == cirMax ||
+				min(maxPolyVertex, cirMin) == maxPolyVertex) {			
 			return false;
-
-
-		/**
-		 * The following code is SAT for polygons
-		 */
-
-
-		// Use each edge to figure a normal as an axis
-		for (Vector edge : other.mEdges) {
-			Vector otherAxis = createNormalAxis(edge);
-
-			// Project the circle's diameter onto the normal axis
-			minEdge = otherAxis.getUnitVector();
-			minEdge.changeMagnitude(halfDim);
-			minEdge.rebase(centerX, centerY);
-			maxEdge = new Vector(minEdge);
-			maxEdge.rebase(centerX, centerY);
-			minEdge.reverse();
-
-			realMin = min(minEdge, maxEdge);
-			if (realMin == maxEdge) {
-				minEdge = maxEdge;
-				maxEdge = minEdge;
-			}
-
-			// Project each point / vector onto the normal
-			otherMinEdge = null;
-			otherMaxEdge = null;
-			for (Vector projection : other.mEdges) {
-				double projX = project(true, projection, otherAxis);
-				double projY = project(false, projection, otherAxis);
-				Vector projectedEdge = new Vector(projX, projY);
-
-				// Figure min projection
-				if (otherMinEdge == null) otherMinEdge = projectedEdge;
-				else otherMinEdge = min(otherMinEdge, projectedEdge);
-				// Figure max projection
-				if (otherMaxEdge == null) otherMaxEdge = projectedEdge;
-				else otherMaxEdge = max(otherMaxEdge, projectedEdge);
-			}
-
-			// Bail out if gap is found
-			if (min(maxEdge, otherMinEdge) == maxEdge ||
-					min(otherMaxEdge, minEdge) == otherMaxEdge)
-				return false;
 		}
 
 		return true;
 	}
 
 	/**
-	 * SAT implementation for circle-circle collision.
+	 * SAT variant implementation for circle-circle collision.
 	 * 
-	 * @param	caller	one circlular Hitbox.
-	 * @param	other	the other.
-	 * @return	true	if a collision occurred, false otherwise.
+	 * @param caller	a circular Hitbox.
+	 * @param other	the other circular Hitbox.
+	 * @return true	if a collision occurred, false otherwise.
 	 */
 	private static boolean collisionCircular(Hitbox caller, Hitbox other) {
-		double calHalf = caller.mWidth / 2;
-		double othHalf = other.mWidth / 2;
-		double calX = caller.mX + calHalf;
-		double calY = caller.mY - calHalf;
-		double othX = other.mX + othHalf;
-		double othY = other.mY - othHalf;
-		double dist = distanceBetween(calX, calY, othX, othY);
-		// Compare distances between circle centers
-		if (dist > (calHalf + othHalf)) return false;
+		// Compute radii
+		double half0 = caller.mWidth / 2;
+		double half1 = other.mWidth / 2;
+		
+		// Form caller's center Point
+		double centerX0 = caller.mLocation.getX() + half0;
+		double centerY0 = caller.mLocation.getY() + half0;
+		
+		// Form other's center Point
+		double centerX1 = other.mLocation.getX() + half1;
+		double centerY1 = other.mLocation.getY() + half1;
+
+		// Measure center Points' distance for collision
+		double dist = distanceBetween(centerX0, centerY0, centerX1, centerY1);
+		if (dist > (half0 + half1)) {
+			return false;
+		}
 		return true;
 	}
 
@@ -402,79 +374,68 @@ public class Hitbox {
 	/**
 	 * SAT implementation for polygon-polygon collision.
 	 * 
-	 * @param	caller	one polygonal Hitbox.
-	 * @param	other	the other.
-	 * @return	true	if a collision occurred, false otherwise.
+	 * @param caller	one polygonal Hitbox.
+	 * @param other	the other.
+	 * @return true	if a collision occurred, false otherwise.
 	 */
 	private static boolean collisionPolygon(Hitbox caller, Hitbox other) {
 
 		// Use each edge to figure a normal as an axis
-		for (Vector edge : caller.mEdges) {
-			Vector axis = createNormalAxis(edge);
-
+		for (Vector2D edge : caller.mEdges) {
+			Vector2D axis = edge.getNormal(true);
+			axis.rebase(0, 0, true);
+			axis.normalize();
+			
 			// Project each point / vector onto the normal
-			Vector minEdge = null,
-					maxEdge = null;
-			for (Vector projection : caller.mEdges) {
-				double projX = project(true, projection, axis);
-				double projY = project(false, projection, axis);
-				Vector projectedEdge = new Vector(projX, projY);
+			Point minV0 = null;
+			Point maxV0 = null;
+			for (Vector2D vertex0 : caller.mEdges) {
+				Point proj0 = project(vertex0, axis);
 
 				// Figure min projection
-				if (minEdge == null) minEdge = projectedEdge;
-				else minEdge = min(minEdge, projectedEdge);
+				if (minV0 == null) minV0 = proj0;
+				else minV0 = min(minV0, proj0);
 				// Figure max projection
-				if (maxEdge == null) maxEdge = projectedEdge;
-				else maxEdge = max(maxEdge, projectedEdge);
+				if (maxV0 == null) maxV0 = proj0;
+				else maxV0 = max(maxV0, proj0);
 			}
-
+			
 			// Figure the other hitbox's projections
-			Vector otherMinEdge = null,
-					otherMaxEdge = null;
-			for (Vector otherProj : other.mEdges) {
-				double otherProjX = project(true, otherProj, axis);
-				double otherProjY = project(false, otherProj, axis);
-				Vector otherProjEdge = new Vector(otherProjX, otherProjY);
-
+			Point minV1 = null;
+			Point maxV1 = null;
+			for (Vector2D vertex1 : other.mEdges) {
+				Vector2D vert1 = new Vector2D(vertex1);
+				Point proj1 = project(vert1, axis);
+				
 				// Figure min projection
-				if (otherMinEdge == null) otherMinEdge = otherProjEdge;
-				else otherMinEdge = min(otherMinEdge, otherProjEdge);
+				if (minV1 == null) minV1 = proj1;
+				else minV1 = min(minV1, proj1);
 				// Figure max projection
-				if (otherMaxEdge == null) otherMaxEdge = otherProjEdge;
-				else otherMaxEdge = max(otherMaxEdge, otherProjEdge);
+				if (maxV1 == null) maxV1 = proj1;
+				else maxV1 = max(maxV1, proj1);
 			}
 
 			// Bail out if gap is found
-			if (min(maxEdge, otherMinEdge) == maxEdge ||
-					min(otherMaxEdge, minEdge) == otherMaxEdge)
+			if (min(maxV0, minV1) == maxV0 ||
+					min(maxV1, minV0) == maxV1) {
+				
+				//System.out.printf("Gap found on Edge %s with Axis %s\n", edge, axis);
+				
 				return false;
+			}
 		}
 
 		return true;
 	}
 
 	/**
-	 * Creates a normal axis for a given line.
+	 * Gets the distance between two {@link Point}s in 2D space.
 	 * 
-	 * @param edge	the original line, represented as a Vector.
-	 * @return		a Vector of the normal axis.
-	 */
-	private static Vector createNormalAxis(Vector edge) {
-		double normalX = edge.getNormalX();
-		double normalY = edge.getNormalY();
-		double len = Math.sqrt(Math.pow(normalX, 2) + Math.pow(normalY, 2));
-		// Wrap the axis' data for easier handling
-		return new Vector(edge.getNormalX() * (1/len), edge.getNormalY() * (1 / len));
-	}
-
-	/**
-	 * Gets the distance between two points in 2D space.
-	 * 
-	 * @param x0	the first x-coordinate.
-	 * @param y0	the first y-coordinate.
-	 * @param x1	the second x-coordinate.
-	 * @param y1	the second y-coordinate.
-	 * @return		the distance between the two points.
+	 * @param x0	the first Point's x-coordinate.
+	 * @param y0	the first Point's y-coordinate.
+	 * @param x1	the second Point's x-coordinate.
+	 * @param y1	the second Point's y-coordinate.
+	 * @return the distance between two Points.
 	 */
 	private static double distanceBetween(double x0, double y0, double x1, double y1) {
 		double xFactor = Math.abs(Math.pow(x1 - x0, 2));
@@ -483,66 +444,71 @@ public class Hitbox {
 	}
 
 	/**
-	 * Chooses the Vector with a lower end y-value, preferring a lower end x-value
-	 * to break even. If both Vectors' end points represent the same points, this
+	 * Chooses the Point with a lower y-value, preferring a lower x-value
+	 * to break even. If both Points' coordinates represent the same points, this
 	 * method returns the second Vector.
 	 * 
-	 * @param	e0	one Vector.
-	 * @param	e1	the second Vector.
-	 * @return		the minimum Vector.
+	 * @param e0	one Point.
+	 * @param e1	the second Point.
+	 * @return the minimum Point.
 	 */
-	private static Vector min(Vector e0, Vector e1) {
-		double endX0 = e0.getEndX(), endY0 = e0.getEndY();
-		double endX1 = e1.getEndX(), endY1 = e1.getEndY();
-		if (endY0 < endY1) return e0;
-		else if (endY0 > endY1) return e1;
-		else if (endX0 < endX1) return e0;
-		else return e1;
+	private static Point min(Point p0, Point p1) {
+		double endX0 = p0.getX(), endY0 = p0.getY();
+		double endX1 = p1.getX(), endY1 = p1.getY();
+		if (endY0 < endY1) return p0;
+		else if (endY0 > endY1) return p1;
+		else if (endX0 < endX1) return p0;
+		else return p1;
 	}
 
 	/**
-	 * Chooses the Vector with a higher end y-value, preferring a higher end x-value
-	 * to break even. If both Vectors' end points represent the same points, this
-	 * method returns the second Vector.
+	 * Chooses the Point with a higher y-value, preferring a higher x-value
+	 * to break even. If both Points' coordinates represent the same points, this
+	 * method returns the second Point.
 	 * 
-	 * @param	e0	one Vector.
-	 * @param	e1	the other Vector.
-	 * @return		the maximum Vector.
+	 * @param e0	one Point.
+	 * @param e1	the other Point.
+	 * @return the maximum Point.
 	 */
-	private static Vector max(Vector e0, Vector e1) {
-		double endX0 = e0.getEndX(), endY0 = e0.getEndY();
-		double endX1 = e1.getEndX(), endY1 = e1.getEndY();
-		if (endY0 > endY1) return e0;
-		else if (endY0 < endY1) return e1;
-		else if (endX0 > endX1) return e0;
-		else return e1;
+	private static Point max(Point p0, Point p1) {
+		double endX0 = p0.getX(), endY0 = p0.getY();
+		double endX1 = p1.getX(), endY1 = p1.getY();
+		if (endY0 > endY1) return p0;
+		else if (endY0 < endY1) return p1;
+		else if (endX0 > endX1) return p0;
+		else return p1;
 	}
 
 	/**
-	 * Calculates the x or y-coordinate of the point projected onto a specified
-	 * axis. The kind of point (x or y) depends on the argument calcX.
+	 * Calculates the x or y-coordinate of a {@link Vector2D}'s projection onto a given
+	 * normalized axis.
 	 * 
-	 * @param	calcX	true to calculate the x-coordinate of the projected point, false to
-	 * 					get the y-coordinate.
-	 * @param	edge	a Vector whose end point is to be projected.
-	 * @param	axis	the Vector whose end point represents the axis to project to.
-	 * @return			the projected coordinate.
+	 * @param vertex	a Vector2D whose {@link Point} is to be projected.
+	 * @param axis	the normalized axis.
+	 * @return the projected Point.
 	 */
-	private static double project(boolean calcX, Vector edge, Vector axis) {
-		double axisEndX = axis.getEndX(), axisEndY = axis.getEndY();
-		double normCoord = axisEndX;
-		if (!calcX) normCoord = axisEndY;
-		return ((edge.getEndX() * axisEndX) + (edge.getEndY() * axisEndY)) * normCoord;
+	private static Point project(Vector2D vertex, Vector2D axis) {
+		
+		// Dot product based off of origin
+		double compX = vertex.getX() * axis.getX();
+		double compY = vertex.getY() * axis.getY();
+		double dotProduct = compX + compY;
+		
+		// Compute Point along line
+		double pX = axis.getX() * dotProduct;
+		double pY = axis.getY() * dotProduct;
+		
+		return new Point(pX, pY);
 	}
 
 	/**
 	 * Sets the x and y location of the Hitbox. This method has no interpolation of
 	 * any kind and so location values will "teleport" to the new coordinates given.
 	 * 
-	 * @param	x	the new x-coordinate.
-	 * @param	y	the new y-coordinate.
+	 * @param x	the new x-coordinate.
+	 * @param y	the new y-coordinate.
 	 * @throws IllegalStateException	if the shape has not been finalized by
-	 * 									a call to lock().
+	 * a call to lock().
 	 * @see #lock
 	 * @see #isLocked()
 	 */
@@ -553,16 +519,16 @@ public class Hitbox {
 		// Shift edges over for non-circular
 		if (getType() != Type.CIRCLE) {
 			// Calc shift
-			double shiftX = x - mX;
-			double shiftY = y - mY;
+			double shiftX = x - mLocation.getX();
+			double shiftY = y - mLocation.getY();
 			// Shift all edge's points
-			for (Vector e : mEdges) {
-				e.add(shiftX, shiftY, shiftX, shiftY);
+			for (Vector2D v : mEdges) {
+				v.add(shiftX, shiftY);
 			}
 		}
-		// Update origin
-		mX = x;
-		mY = y;
+		// Update location
+		mLocation.setX(x);
+		mLocation.setY(y);
 	}
 
 	/**
@@ -583,13 +549,14 @@ public class Hitbox {
 		}
 		if (getType() != Type.CIRCLE) {
 			// Shift the coordinates of all Edges
-			for (Vector e : mEdges) {
-				e.add(x, y, x, y);
+			for (Vector2D v : mEdges) {
+				v.add(x, y);
 			}
 		}
-		// Update origin
-		mX = x;
-		mY = y;
+		// Update location
+		Point first = mEdges.get(0).getPoint();
+		mLocation.setX(first.getX());
+		mLocation.setY(first.getY());
 	}
 
 	/**
@@ -606,13 +573,12 @@ public class Hitbox {
 	/**
 	 * Prevents the Hitbox from changing its general shape. That is, calling
 	 * lock() will prevent calls to addEdge() from taking effect. This method
-	 * finalizes the shape and thus should be called before actual use of the
-	 * Hitbox. Some methods may throw an Exception if called before this
-	 * method.
+	 * finalizes the shape and calculates the dimensions of polygons and thus
+	 * should be called before actual use of the Hitbox. Some methods may throw
+	 * an Exception if called before this method.
 	 * 
 	 * @throws IllegalStateException	if the Hitbox does not have at least
-	 * 									three edges.
-	 * 
+	 * three edges.
 	 * @see #isLocked()
 	 * @see #addEdge(double, double, double, double)
 	 */
@@ -621,14 +587,14 @@ public class Hitbox {
 			return;
 		} else {
 			// Enforce 3 edge minimum
-			if (getType() == Type.POLYGON && mEdges.size() <= 3) {
+			if (getType() == Type.POLYGON && mEdges.size() < POLYGON_EDGE_LIMIT) {
 				throw new IllegalStateException("Polygons must have at least three edges");
 			}
 			
 			mLock = true;
 		}
 		// Calculate dimensions if polygonal or rectangular
-		if (getType() != Type.CIRCLE) calculateDimensions();
+		if (mType != Type.CIRCLE && mType != Type.RECTANGLE) calculateDimensions();
 	}
 
 	/**
@@ -636,6 +602,7 @@ public class Hitbox {
 	 * the Hitbox has not been locked.
 	 * 
 	 * @return	the width in pixels.
+	 * @see #getHeight()
 	 * @see #lock
 	 * @see #isLocked()
 	 */
@@ -648,6 +615,7 @@ public class Hitbox {
 	 * the Hitbox has not been locked.
 	 * 
 	 * @return	the height in pixels.
+	 * @see #getWidth()
 	 * @see #lock
 	 * @see #isLocked()
 	 */
@@ -658,28 +626,57 @@ public class Hitbox {
 	/**
 	 * Gets the Type of the Hitbox.
 	 * 
-	 * @return	either POLYGON, RECTANGLE, or CIRCLE.
+	 * @return	either {@link Hitbox.Type#POLYGON}, {@link Hitbox.Type#RECTANGLE}, 
+	 * or {@link Hitbox.Type#CIRCLE}.
 	 */
 	public Type getType() {
 		return mType;
 	}
 
 	/**
-	 * Gets the x-coordinate of the Hitbox.
+	 * Gets the x-coordinate of the Hitbox. This value may not be accurate for
+	 * polygonal Hitboxes whose {@link #lock()} has not been called.
 	 * 
 	 * @return the x-coordinate.
+	 * @see #getY()
 	 */
 	public double getX() {
-		return mX;
+		return mLocation.getX();
 	}
 
 	/**
-	 * Gets the y-coordinate of the Hitbox.
+	 * Gets the y-coordinate of the Hitbox. This value may not be accurate for
+	 * polygonal Hitboxes whose {@link #lock()} has not been called.
 	 * 
 	 * @return the y-coordinate.
+	 * @see #getX()
 	 */
 	public double getY() {
-		return mY;
+		return mLocation.getY();
+	}
+	
+	/**
+	 * Gets the x and y-coordinate of the Hitbox wrapped in a {@link Point}.
+	 *
+	 * @return	the x and y-coordinates.
+	 */
+	public Point getLocation() {
+		return new Point(mLocation);
+	}
+	
+	/**
+	 * Retrieves an {@link Iterable} of {@link Vector2D}s that represent the Hitbox's
+	 * edges that form the shape. The returned edges are copies and so any modification
+	 * to an edge will have no effect on the Hitbox.
+	 *
+	 * @return the Iterable of edges.
+	 */
+	public Iterable<Vector2D> edges() {
+		ArrayList<Vector2D> edges = new ArrayList<Vector2D>();
+		for (Vector2D edge : mEdges) {
+			edges.add(new Vector2D(edge));
+		}
+		return edges;
 	}
 
 	/**
@@ -701,12 +698,6 @@ public class Hitbox {
 		 * Hitbox representing a circle. This type has no edges.
 		 */
 		CIRCLE
-	}
-	
-	public static void main(String[] args) {
-		Hitbox square = new Hitbox(0, 10, 10, 10);
-		Hitbox circle = new Hitbox(15, 5, 15);
-		System.out.println("Collision: " + circle.collidesWith(square));
 	}
 
 }
