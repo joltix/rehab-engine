@@ -42,6 +42,7 @@ import com.rehab.world.Vector2D.Point;
  */
 public class Hitbox {
 
+	// Minimum number of edges allowed for polygons
 	private static final int POLYGON_EDGE_LIMIT = 3;
 	
 	// Constants for two main axis
@@ -418,9 +419,6 @@ public class Hitbox {
 			// Bail out if gap is found
 			if (min(maxV0, minV1) == maxV0 ||
 					min(maxV1, minV0) == maxV1) {
-				
-				//System.out.printf("Gap found on Edge %s with Axis %s\n", edge, axis);
-				
 				return false;
 			}
 		}

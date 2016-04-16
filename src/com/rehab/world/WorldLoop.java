@@ -1,5 +1,8 @@
 package com.rehab.world;
 
+import java.util.Hashtable;
+
+import com.rehab.world.Vector2D.Point;
 
 public class WorldLoop extends Thread {
 	
@@ -7,6 +10,11 @@ public class WorldLoop extends Thread {
 	private int mTarTick;
 	// Desired duration in nanoseconds
 	private long mTickInterval;
+	
+	private long mLastTickStart = 0;
+	private long mLastTickDuration = 0;
+	
+	private long mTickLast = 0, mTickDelta = 0;
 	// Whether or not to keep looping
 	private boolean mLoop = true;
 	
@@ -15,6 +23,10 @@ public class WorldLoop extends Thread {
 	
 	// The level to run
 	private Arena mLvl;
+	
+	private FrameDepot mDepot = FrameDepot.getInstance();
+	
+	private Hashtable<Integer, Point> locations = new Hashtable<Integer, Point>();
 		
 	/**
 	 * Gets an instance of the WorldLoop. This method should only be used if getInstance(int, Arena)
@@ -52,7 +64,7 @@ public class WorldLoop extends Thread {
 	 */
 	private WorldLoop(int tickRate, Arena arena) {
 		mLvl = arena;
-		mLvl.setTime(tickRate);
+		mLvl.setDeltaTime(1d / tickRate);
 		// Measure time needed
 		mTarTick = tickRate;
 		mTickInterval = 1000000000 / mTarTick;
@@ -64,24 +76,63 @@ public class WorldLoop extends Thread {
 	 * 		the number of ticks per second.
 	 */
 	public int getTickRate() { return mTarTick; }
-		
+	
+	public void halt() {
+		mLoop = false;
+	}
+	
 	@Override
 	public void run() {
 		super.run();
 		
+		mLastTickStart = System.nanoTime();
+		
 		while (mLoop) {
-			long tickStart = System.nanoTime();
+			mLastTickDuration = System.nanoTime() - mLastTickStart;
+			mLastTickStart = System.nanoTime();
 			
 			// Run physics for 1 unit
-			mLvl.step();
-						
-			long tickDur = System.nanoTime() - tickStart;
+			while (mLastTickDuration > mTickInterval) {
+				mLvl.stepActors();
+				mLvl.stepProjectiles();
+				mLastTickDuration -= mTickInterval;
+			}
 			
-
-			// Skip frame if tick was too long
-			if (tickDur < mTickInterval) {
+			// Send draw requests to update screen
+			InstanceManager manager = InstanceManager.getInstance();
+			Iterable<Actor> acts = manager.getLoadedActors();
+			Iterable<Projectile> projs = manager.getLoadedProjectiles();
+			Iterable<Prop> props = manager.getLoadedProps();
+			
+			Frame frame = mDepot.requestFrame();
+			// Send draw requests for all visible game objs
+			for (Actor a : acts) {
+				if (a.isVisible()) {
+					frame.push(a);
+				}
+			}
+			for (Projectile p : projs) {
+				if (p.isVisible()) {
+					frame.push(p);
+				}
+			}
+			for (Prop p : props) {
+				if (p.isVisible()) {
+					frame.push(p);
+				}
+			}
+			frame.lock();
+			ProtoRender.getInstance().requestDraw(frame);
+			
+			
+			long currentDuration = System.nanoTime() - mLastTickStart;
+			if (currentDuration < mTickInterval) {
 				try {
-					Thread.sleep((mTickInterval - tickDur) / 1000000);
+					Thread.sleep((mTickInterval - currentDuration) / 1000000);
+				} catch (InterruptedException e) { e.printStackTrace(); }
+			} else if (currentDuration > mTickInterval) {
+				try {
+					Thread.sleep((currentDuration - mTickInterval) / 1000000);
 				} catch (InterruptedException e) { e.printStackTrace(); }
 			}
 		}

@@ -18,4 +18,6 @@ public interface Drawable {
 	
 	void onClick();
 	
+	boolean isVisible();
+	
 }

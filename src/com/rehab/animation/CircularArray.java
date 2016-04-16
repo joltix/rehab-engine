@@ -1,9 +1,17 @@
 package com.rehab.animation;
-
 import java.util.ArrayList;
-
+/**
+ * Modified Arraylist Class so that it an represent a reel in animation
+ * in which a reel in circular and thus when you are at the end of reel
+ * it will wrap back to the beginning and not have 
+ * @author TrishDaoLe
+ *
+ * @param <E>
+ */
 public class CircularArray<E> extends ArrayList<E> {
-
+	/**
+	 * @param index
+	 */
 	@Override
 	public E get(int index) {
 		// TODO Auto-generated method stub
@@ -19,14 +27,5 @@ public class CircularArray<E> extends ArrayList<E> {
 				return super.get(index);
 	}
 	
-	public static void main(String [ ] args){
-		CircularArray reels = new CircularArray();
-		reels.add(10); //index =0
-		reels.add(20); //i=1
-		reels.add(30); //i=2
-		reels.add(40); //i=3
-		
-		System.out.println(reels.get(4));
-		
-	}
+	
 }

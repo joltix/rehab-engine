@@ -256,6 +256,7 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	public Phys getPhysics() { return mPhys; }
 	
 	public Hitbox getCollision() { return mCollision; }
+	
 
 	/**
 	 * Gets the instance's visual representation.
