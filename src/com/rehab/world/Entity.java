@@ -239,22 +239,23 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * @see #getHealth()
 	 * @see #setHealth(double)
 	 */
-	protected void setMaximumHealth(double maxHealth) {
-		mMaxHealth = maxHealth;
-	}
+	protected void setMaximumHealth(double maxHealth) { mMaxHealth = maxHealth; }
+	
+	/**
+	 * Gets the maximum health of the entity.
+	 * 
+	 * @return the max health of the entity.
+	 */
+	public double getMaximumHealth() { return mMaxHealth; }
 
 	/**
 	 * Gets the instance's physics model.
 	 * 
 	 * @return	the Phys instance representing the Entity's physics.
 	 */
-	public Phys getPhysics() {
-		return mPhys;
-	}
+	public Phys getPhysics() { return mPhys; }
 	
-	public Hitbox getCollision() {
-		return mCollision;
-	}
+	public Hitbox getCollision() { return mCollision; }
 
 	/**
 	 * Gets the instance's visual representation.
@@ -263,9 +264,7 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * @see #setSprite(Sprite)
 	 */
 	public Sprite getSprite() {
-		synchronized (this) {
 			return mSprite;
-		}
 	}
 
 	/**
@@ -285,9 +284,7 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * @see #getY()
 	 */
 	public double getX() {
-		synchronized (this) {
-			return mPhys.getX();
-		}
+		return mPhys.getX();
 	}
 
 	/**
@@ -297,9 +294,7 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * @see	#getX()
 	 */
 	public double getY() {
-		synchronized (this) {
-			return mPhys.getY();
-		}
+		return mPhys.getY();
 	}
 
 	/**
