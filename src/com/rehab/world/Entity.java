@@ -2,7 +2,7 @@ package com.rehab.world;
 
 import com.rehab.animation.Drawable;
 import com.rehab.animation.Sprite;
-import com.rehab.world.InstanceManager.IdentifiableEntity;
+import com.rehab.world.Register.Identifiable;
 
 /**
  * <p>
@@ -30,19 +30,17 @@ import com.rehab.world.InstanceManager.IdentifiableEntity;
  * The code above creates an Actor with 62 kg of mass and a 100 health point maximum.
  * </p>
  */
-public abstract class Entity extends IdentifiableEntity implements Drawable, OnMoveListener {
-
-	// Profile
-	private int mOwner;
-	private Sprite mSprite;
+public abstract class Entity extends Identifiable implements Drawable, OnMoveListener {
 
 	// Physics and collision data
 	private Phys mPhys;
 	private Hitbox mCollision;
+	private Sprite mSprite;
 
 	// Stats
-	private double mHealth;
+	private int mOwner;
 	private double mMaxHealth;
+	private double mHealth;
 
 	// Flags
 	private boolean mVisible = true;
@@ -63,6 +61,30 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 		mPhys = new Phys(mass);
 		mMaxHealth = healthCap;
 		mHealth = mMaxHealth;
+	}
+	
+	/**
+	 * Constructor for cloning an Entity. The new Entity's properties are exactly the
+	 * same as the Entity given as a template. This includes collision model, health,
+	 * and other properties such as visibility but does not include any set listeners.
+	 * 
+	 * @param e	the Entity to clone.
+	 */
+	public Entity(Entity e) {
+		// Copy physics, collision model, and sprite
+		mPhys = new Phys(e.mPhys);
+		mCollision = new Hitbox(e.mCollision);
+		mSprite = e.mSprite;
+		
+		// Copy stats
+		mOwner = e.mOwner;
+		mMaxHealth = e.mMaxHealth;
+		mHealth = e.mHealth;
+		
+		// Copy flags
+		mVisible = e.mVisible;
+		mDisabled = e.mDisabled;
+		mMovable = e.mMovable;	
 	}
 
 	/**
@@ -205,7 +227,9 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 		// Prevent health from going past maximum and disable instance if zeroed health
 		if (health > mMaxHealth) {
 			health = mMaxHealth;
-		} else if (health <= 0) health = 0;
+		} else if (health <= 0) {
+			health = 0;
+		}
 
 		// Update health values
 		double oldHealth = mHealth;
@@ -213,9 +237,13 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 
 		// Trigger callbacks depending on change in health
 		double diff = health - mHealth;
-		if (mHealthIncreaseListener != null)
-			if (diff >= 0) mHealthIncreaseListener.onHealthIncrease(oldHealth, mHealth);
-			else mHealthDecreaseListener.onHealthDecrease(oldHealth, mHealth);
+		if (mHealthIncreaseListener != null) {
+			if (diff >= 0) {
+				mHealthIncreaseListener.onHealthIncrease(oldHealth, mHealth);
+			} else {
+				mHealthDecreaseListener.onHealthDecrease(oldHealth, mHealth);
+			}
+		}
 	}
 
 	/**
@@ -224,9 +252,7 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * @param h	the Hitbox representing the Entity's collision.
 	 * @see #collidesWith(Entity)
 	 */
-	protected void setCollisionModel(Hitbox h) {
-		mCollision = h;
-	}
+	protected void setCollisionModel(Hitbox h) { mCollision = h; }
 
 	/**
 	 * Sets the maximum boundary at which health is considered 100% or "full". If the
@@ -251,12 +277,16 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	/**
 	 * Gets the instance's physics model.
 	 * 
-	 * @return	the Phys instance representing the Entity's physics.
+	 * @return the Phys instance representing the Entity's physics.
 	 */
 	public Phys getPhysics() { return mPhys; }
 	
+	/**
+	 * Gets the instance's collision model.
+	 *
+	 * @return the Hitbox instance representing the Entity's collision.
+	 */
 	public Hitbox getCollision() { return mCollision; }
-	
 
 	/**
 	 * Gets the instance's visual representation.
@@ -264,9 +294,7 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * @return	the Sprite to draw on-screen.
 	 * @see #setSprite(Sprite)
 	 */
-	public Sprite getSprite() {
-			return mSprite;
-	}
+	public Sprite getSprite() { return mSprite; }
 
 	/**
 	 * Sets the Sprite to represent the Entity on-screen.
@@ -274,9 +302,7 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * @param sprite	the Sprite to draw on-screen.
 	 * @see #getSprite()
 	 */
-	public void setSprite(Sprite sprite) {
-		mSprite = sprite;
-	}
+	public void setSprite(Sprite sprite) { mSprite = sprite; }
 
 	/**
 	 * Gets the instance's x coordinate.
@@ -284,9 +310,7 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * @return	the x location.
 	 * @see #getY()
 	 */
-	public double getX() {
-		return mPhys.getX();
-	}
+	public double getX() { return mPhys.getX(); }
 
 	/**
 	 * Gets the instance's y coordinate.
@@ -294,9 +318,7 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * @return	the y location.
 	 * @see	#getX()
 	 */
-	public double getY() {
-		return mPhys.getY();
-	}
+	public double getY() { return mPhys.getY(); }
 
 	/**
 	 * Gets the collidable width of the instance in pixels. If the Entity has no collision
@@ -307,10 +329,15 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * @see	#getHeight()
 	 */
 	public double getWidth() {
-		if (mCollision == null)
-			if (mSprite == null) return 0;
-			else return mSprite.getWidth();
-		else return mCollision.getWidth();
+		if (mCollision == null) {
+			if (mSprite == null) {
+				return 0;
+			} else {
+				return mSprite.getWidth();
+			}
+		} else {
+			return mCollision.getWidth();
+		}
 	}
 
 	/**
@@ -322,10 +349,15 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * @see #getWidth()
 	 */
 	public double getHeight() {
-		if (mCollision == null)
-			if (mSprite == null) return 0;
-			else return mSprite.getHeight();
-		else return mCollision.getHeight();
+		if (mCollision == null) {
+			if (mSprite == null) {
+				return 0;
+			} else {
+				return mSprite.getHeight();
+			}
+		} else {
+			return mCollision.getHeight();
+		}
 	}
 
 	/**
@@ -359,7 +391,9 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * enable gravity.
 	 * @see #isGravityEnabled()
 	 */
-	public void setEnableGravity(boolean gravityEnabled) { mPhys.setEnableGravity(gravityEnabled); }
+	public void setEnableGravity(boolean gravityEnabled) {
+		mPhys.setEnableGravity(gravityEnabled);
+	}
 
 	/**
 	 * Checks whether or not the Entity should be drawn on-screen.
@@ -368,7 +402,9 @@ public abstract class Entity extends IdentifiableEntity implements Drawable, OnM
 	 * Sprite, false otherwise.
 	 * @see #setVisibility(boolean)
 	 */
-	public boolean isVisible() { return mVisible && mSprite != null; }
+	public boolean isVisible() {
+		return mVisible && mSprite != null;
+	}
 	
 	/**
 	 * Sets whether or not the Entity should be drawn on-screen.
