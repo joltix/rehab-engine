@@ -140,13 +140,7 @@ public class ProtoRender extends Thread {
 	}
 	
 	public void requestDraw(Frame frame) {
-		Frame lastFrame = mFrameBuffer.peek();
-		// Skip frame if same time (duplicate frame)
-		if (lastFrame != null && lastFrame.getTimestamp() == frame.getTimestamp()) {
-			return;
-		}
 		mFrameBuffer.add(frame);
-		lastFrame = frame;
 	}
 	
 	/**
