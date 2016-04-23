@@ -1,67 +1,87 @@
 package com.rehab.world;
 
 import java.util.LinkedList;
+import java.util.Queue;
 
-import com.rehab.animation.Drawable;
+import com.rehab.world.Frame.Renderable;
+
 
 public class LayerManager {
+	
+	// Layer count
+	public static final int NUMBER_OF_LAYERS = 5;
+	
+	// Layer address constants
+	public static final int LAYER_GUI = 0;
+	public static final int LAYER_PROP = 1;
+	public static final int LAYER_FREE_1 = 2;
+	public static final int LAYER_FREE_2 = 3;
+	public static final int LAYER_BACKGROUND = 4;
+	
 	// The available layers to add to and retrieve
-	private LinkedList<Drawable>[] mLayers;
+	private Queue<Renderable>[] mLayers;
 	
 	/**
-	 * Constructor for a certain number of layers
-	 * @param layerCount
-	 * 		the number of layers to create.
+	 * Constructor for a preset number of layers.
+	 * 
+	 * @see #NUMBER_OF_LAYERS
 	 */
 	@SuppressWarnings("unchecked")
-	public LayerManager(int layerCount) {
-		mLayers = new LinkedList[layerCount];
+	public LayerManager() {
+		mLayers = new LinkedList[NUMBER_OF_LAYERS];
 		for (int i = 0; i < mLayers.length; i++)
-			mLayers[i] = new LinkedList<Drawable>();
+			mLayers[i] = new LinkedList<Renderable>();
 	}
 	
 	/**
-	 * Adds a Drawable to the layer associated with the index returned from calling
-	 * getZ() on the given Drawable.
-	 * @param drawable
-	 * 		the Drawable instance.
+	 * Adds a Renderable to the layer specified by the Renderable's z value
+	 * (layer constant).
+	 * 
+	 * @param renderable
+	 * 		the Renderable instance.
 	 */
-	public void add(Drawable drawable) {
-		int z = drawable.getZ();
-		// Create the head Layerable or append to the end of the list
-		if (mLayers[z] == null) mLayers[z] = new LinkedList<Drawable>();
-		else mLayers[z].add(drawable);
+	public void add(Renderable renderable) {
+		int z = renderable.getZ();
+		// Append to the end of the layer
+		mLayers[z].add(renderable);
 	}
 	
 	/**
-	 * Gets the layer of Drawables associated with a given layer index.
-	 * @param layerIndex
-	 * 		the index of the desired layer.
-	 * @return
-	 * 		an Iterable containing all desired Drawables, or null if
-	 * 		no layer is associated with the desired index.
+	 * Gets the layer of Renderables associated with a given layer constant.
+	 * 
+	 * @param layerIndex	the layer constant.
+	 * @return	an Iterable containing all desired Renderables, or null
+	 * 			if no layer is associated with the desired constant.
 	 */
-	public Iterable<Drawable> getLayer(int layerIndex) {
+	public Queue<Renderable> getLayer(int layerIndex) {
 		if (layerIndex >= mLayers.length) return null;
-		return mLayers[layerIndex];
+		Queue<Renderable> queue = mLayers[layerIndex];
+		mLayers[layerIndex] = new LinkedList<Renderable>();
+		return queue;
 	}
 	
 	/**
 	 * Gets the number of layers in the LayerManager instance. This method does not
-	 * take into account empty layers. That is, layers with no Entities will still
+	 * take into account empty layers. That is, layers with no Renderables will still
 	 * be returned (only as having a length of 0).
-	 * @return
-	 * 		the number of layers available to store Drawables in.
+	 * 
+	 * @return	the number of layers available to store Renderables.
 	 */
-	public int layerCount() { return mLayers.length; }
+	public int layerCount() {
+		return mLayers.length;
+	}
 	
 	/**
-	 * Gets the number of Drawables in the layer associated with a specified index.
-	 * @param layerIndex
-	 * 		the index of the layer.
-	 * @return
-	 * 		the number of Drawables in the layer, or -1 if no layer was associated
-	 * 		with the desired index
+	 * Gets the number of Renderables in the layer associated with a layer constant.
+	 * 
+	 * @param layerIndex	the layer constant.
+	 * @return	the number of Renderables in the layer, or -1 if no layer was associated
+	 * 			with the desired index.
+	 * @see #LAYER_GUI
+	 * @see #LAYER_PROP
+	 * @see #LAYER_FREE_1
+	 * @see #LAYER_FREE_2
+	 * @see #LAYER_BACKGROUND
 	 */
 	public int getLayerSize(int layerIndex) {
 		// -1 if invalid index

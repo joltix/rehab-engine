@@ -1,6 +1,9 @@
 package com.rehab.user;
 
 import com.rehab.world.Actor;
+import com.rehab.world.Main;
+import com.rehab.world.SpawnManager;
+import com.rehab.world.Vector2D.Point;
 
 import javafx.event.EventHandler;
 import javafx.scene.canvas.Canvas;
@@ -29,19 +32,22 @@ public class Movement {
 		canvas.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent click) {
-				if (click.getCode() == KeyCode.RIGHT) {
+				KeyCode code = click.getCode();
+				if (code == KeyCode.RIGHT) {
+					// Move player right
 					character.moveBy(5, 0);
+					
+				} else if (code == KeyCode.LEFT) {
+					// Move player left
+					character.moveBy(-5, 0);
+					
+				} else if (code == KeyCode.SPACE) {
+					// Spawn a new dummy at the top of the screen
+					Actor dummy = Main.getDummy();
+					SpawnManager.getInstance().immediateSpawn(dummy, new Point(128, 480));
 				}
 			}
 		});
 
-		canvas.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
-			@Override
-			public void handle(KeyEvent click) {
-				if (click.getCode() == KeyCode.LEFT) {
-					character.moveBy(-5, 0);
-				}
-			}
-		});
 	}
 }

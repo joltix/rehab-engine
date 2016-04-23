@@ -1,155 +1,202 @@
 package com.rehab.world;
 
+import com.rehab.world.Vector2D.Point;
+
 public class Phys {
 
-    // Constants for WASD unit vectors
-    public static final Vector UNIT_EAST = new Vector(1, 0);
-    public static final Vector UNIT_NORTH = new Vector(0, 1);
-    public static final Vector UNIT_WEST = new Vector(0, 1);
-    public static final Vector UNIT_SOUTH = new Vector(0, -1);
-
-    // Constants for main 45 degree angles
-    public static final Vector UNIT_NE = new Vector(1, 1);
-    public static final Vector UNIT_NW = new Vector(-1, 1);
-    public static final Vector UNIT_SE = new Vector(1, -1);
-    public static final Vector UNIT_SW = new Vector(-1, -1);
-
+	private Vector2D mLastVelocity = new Vector2D(0, 0);
+	
+	private Vector2D mVelocity = new Vector2D(0, 0);
+	
     // Physics data
-    private double mMass,
-                    mSpeed = 0;
+    private double mMass;
+    private double mSpeed = 0;
 
-    // Current velocity and last velocity cached
-    private Vector mVelocity = new Vector(0, 0),
-                    mLastVelocity = new Vector(0, 0);
+    private Point mLocation = new Point(0, 0);
+	private Point mLastLocation = new Point(0, 0);
 
     // Flags
-    private boolean mEnableGravity = true;
+    private boolean mEnableGravity = false;
 
     /**
      * Basic constructor for a Phys using (at a minimum) mass without a set velocity.
-     * @param mass
-     * 		the object's mass in kilograms.
+     * 
+     * @param mass	the object's mass in kilograms.
      */
-    public Phys(double mass) { mMass = mass; }
-
-	/**
-	 * Applies a velocity vector to move the instance along.
-	 * @param velocity
-	 * 		the velocity Vector to affect the Entity.
-	 */
-    public void moveImpulse(Vector velocity) {
-        // Save current velocity
-        mLastVelocity.updateFrom(mVelocity);
-        // Apply acceleration
-        if (mSpeed == 0) mVelocity.add(velocity);
-        else mVelocity.changeMagnitude(velocity.getMagnitude() + mVelocity.getMagnitude());
-        // Enact location move and cache speed
-        moveBy(mVelocity.endX - mVelocity.startX, mVelocity.endY - mVelocity.startY);
-        mSpeed = mVelocity.getMagnitude();
+    public Phys(double mass) {
+    	mMass = mass;
+    }
+    
+    /**
+     * Constructor for cloning a Phys. The new Phys will have all the same values
+     * for its properties as the Phys that is given as an argument.
+     * 
+     * @param phys	the Phys to clone.
+     */
+    public Phys(Phys phys) {
+    	// Copy velocity
+    	mLastVelocity = new Vector2D(phys.mLastVelocity);
+    	mVelocity = new Vector2D(phys.mVelocity);
+    	// Copy stats
+    	mMass = phys.mMass;
+    	mSpeed = phys.mSpeed;
+    	// Copy location
+    	mLocation = new Point(phys.mLocation);
+    	mLastLocation = new Point(phys.mLastLocation);
+    	// Copy flags
+    	mEnableGravity = phys.mEnableGravity;
     }
 
+	/**
+	 * Applies a velocity vector to move the instance along. The Vector to add
+	 * must start at origin.
+	 * 
+	 * @param velocity	the velocity Vector to affect the Entity.
+	 */
+    public void moveImpulse(Vector2D velocity) {
+    	saveState();
+    	
+    	double x = mLocation.getX();
+    	double y = mLocation.getY();
+    	mVelocity.add(velocity);
+    	mSpeed = mVelocity.magnitude();
+    	
+    	// Move
+    	mLocation.setX(x + mVelocity.getX());
+    	mLocation.setY(y + mVelocity.getY());
+    }
+    
     /**
-     * Moves the Phys instance by some x and y values.
-     * @param x
-     * 		the x coordinate shift.
-     * @param y
-     * 		the y coordinate shift.
+     * Moves the Phys by some x and y values. The coordinates are shifted by adding the
+     * given values to the corresponding coordinates.
+     *
+     * @param x	the change in x.
+     * @param y	the change in y.
+     * @throws IllegalArgumentException	when either x or y-coordinate is equivalent to
+     * {@link Double#NaN}.
      */
     public void moveBy(double x, double y) {
-    	// Save velocity
-    	mLastVelocity.updateFrom(mVelocity);
+    	ensureCoordinateValidity(x, y);
+    	saveState();
     	
-    	mVelocity.startX += x;
-    	mVelocity.startY += y;
-    	mVelocity.endX += x;
-    	mVelocity.endY += y;
+    	// Change location
+    	mLocation.setX(mLocation.getX() + x);
+    	mLocation.setY(mLocation.getY() + y);
     }
 
 	/**
-	 * Moves the Entity to the specified x and y coordinates. Calling this method will
-	 * move the instance to the given coordinates but will erase direction and speed.
-	 * The instance will relocate standing still.
-	 * @param x
-	 * 		the new x coordinate.
-	 * @param y
-	 * 		the new y coordinate.
-	 * @param conserveVelocity
-	 * 		true if the relative velocities should be maintained after the relocation,
-	 * 		false otherwise.
+	 * Moves the Entity to the specified x and y coordinates.
+	 * 
+	 * @param x	the new x coordinate.
+	 * @param y	the new y coordinate.
+     * @throws IllegalArgumentException	when either x or y-coordinate is equivalent to
+     * {@link Double#NaN}.
 	 */
-    public void moveTo(double x, double y, boolean conserveVelocity) {
-    	// Save vals as previous
-    	mLastVelocity.updateFrom(mVelocity);
+    public void moveTo(double x, double y) {
+    	ensureCoordinateValidity(x, y);
+    	saveState();
     	
-        // Keep velocity after relocation
-        if (conserveVelocity) {
-        	mVelocity.endX += x - mVelocity.endX;
-        	mVelocity.endY += y - mVelocity.endY;
-        } else {
-        	// Erase velocity
-        	mVelocity.endX = x;
-        	mVelocity.endY = y;
-        }
-        // Set new position
-        mVelocity.startX = x;
-        mVelocity.startY = y;
+    	// Change location
+    	mLocation.setX(x);
+    	mLocation.setY(y);
     }
     
     /**
-     * Changes the Phys' speed to 0. That is, this Phys' velocity
-     * has its magnitude changed to 0.
+     * Throws an {@link Exception} if either of the given values are equivalent to {@link Double#NaN}.
+     *
+     * @param x	the x value.
+     * @param y	the y value.
+     * @throws IllegalArgumentException	if either value equals {@link Double#NaN}.
      */
-    public void clearSpeed() {
-    	mLastVelocity.updateFrom(mVelocity);
-    	// Remove the speed
-    	mVelocity.endX = mVelocity.startX;
-    	mVelocity.endY = mVelocity.startY;
-    	mSpeed = 0;
+    private void ensureCoordinateValidity(double x, double y) {
+    	if (x == Double.NaN) {
+    		throw new IllegalArgumentException("x must be a number");
+    	}
+    	if (x == Double.NaN) {
+    		throw new IllegalArgumentException("y must be a number");
+    	}
+    }
+    
+    /**
+     * Saves the Phys's location and velocity for later use or rollback. This method
+     * is called whenever the Phys's state is about to change.
+     */
+    private void saveState() {
+    	// Save location
+    	mLastLocation.setX(mLocation.getX());
+    	mLastLocation.setY(mLocation.getY());
     }
 
 	/**
-	 * Gets the instance's x coordinate.
-	 * @return
-	 * 		the x location.
+	 * Gets the Phys's x-coordinate.
+	 * 
+	 * @return	the x-location.
+	 * @see #getY()
 	 */
-    public double getX() { return mVelocity.startX; }
+    public double getX() {
+    	return mLocation.getX();
+    }
 
 	/**
-	 * Gets the instance's y coordinate.
-	 * @return
-	 * 		the y location.
+	 * Gets the Phys's y-coordinate.
+	 * 
+	 * @return	the y-location.
+	 * @see #getX()
 	 */
-    public double getY() { return mVelocity.startY; }
+    public double getY() {
+    	return mLocation.getY();
+    }
+    
+    public double getLastX() {
+    	return mLastLocation.getX();
+    }
+    
+    public double getLastY() {
+    	return mLastLocation.getY();
+    }
 
     /**
-     * Gets a unit Vector representing the current heading of the
-     * Phys instance.
-     * @return
-     * 		the unit Vector.
+     * Gets the current velocity vector. Altering the values of the returned
+     * Vector2D will not affect the Phys instance's velocity vector.
+     * 
+     * @return	a copy of the velocity vector.
+     * @see #getHeading()
+     * @see #getSpeed()
      */
-    public Vector getHeading() { return mVelocity.getUnitVector(); }
+    public Vector2D getVelocity()
+    {
+    	return new Vector2D(mVelocity);
+    }
     
+    /**
+     * Gets a unit vector representing the direction of the Phys's movement.
+     * 
+     * @return	the unit Vector.
+     * @see #getVelocity()
+     * @see #getSpeed()
+     */
+    public Vector2D getHeading() {
+    	return mVelocity.getUnitVector();
+    }
+
 	/**
 	 * Gets the instance's mass.
-	 * @return
-	 * 		mass in kilograms.
+	 * 
+	 * @return	mass in kilograms.
 	 */
-    public double getMass() { return mMass; }
+    public double getMass() {
+    	return mMass;
+    }
 
 	/**
 	 * Gets the instance's speed.
-	 * @return
-	 * 		speed in meters per second.
+	 * 
+	 * @return	speed in meters per second.
+	 * @see #getVelocity()
 	 */
-    public double getSpeed() { return mSpeed; }
-
-	/**
-	 * Sets the instance's speed. Changing speed will result in a faster travel
-	 * in the same direction as any previous heading.
-	 * @param metersPerSecond
-	 * 		speed in meters per second.
-	 */
-    public void setSpeed(double metersPerSecond) { mSpeed = metersPerSecond; }
+    public double getSpeed() {
+    	return mSpeed;
+    }
 
 	/**
 	 * Checks whether or not the instance is affected by gravity.
@@ -157,7 +204,9 @@ public class Phys {
 	 * 		true if the instance is under the influence of gravity, false
 	 *		otherwise.
 	 */
-    public boolean isGravityEnabled() { return mEnableGravity; }
+    public boolean isGravityEnabled() {
+    	return mEnableGravity;
+    }
 
 	/**
 	 * Sets whether or not the Entity should be pulled to the source of gravity.
@@ -165,226 +214,8 @@ public class Phys {
 	 *		true if the Entity should not be affected by gravity, false to
 	 *		enable gravity.
 	 */
-    public void setEnableGravity(boolean enable) { mEnableGravity = enable; }
-
-    public static class Vector {
-        // The Vector's two points
-        private double startX, startY,
-                        endX, endY;
-
-        /**
-         * Constructor for a Vector with no velocity set at the origin for
-         * location.
-         */
-        public Vector() {
-        	startX = 0;
-        	startY = 0;
-        	endX = 0;
-        	endY = 0;
-        }
-
-        /**
-         * Constructor for a single-point Vector. Coordinates
-         * passed in to this constructor can be retrieved via access
-         * to the corresponding "end" variables.
-         * @param x
-         * 		the x coordinate defining heading.
-         * @param y
-         * 		the y coordinate defining heading.
-         */
-        public Vector(double x, double y) {
-            endX = x;
-            endY = y;
-        }
-
-        /**
-         * Constructor for a dual-point Vector. Coordinates passed in to this
-         * constructor can be retrieved via access to the "start" and "end"
-         * variables.
-         * @param x0
-         * 		the starting point's x coordinate.
-         * @param y0
-         * 		the starting point's y coordinate.
-         * @param x1
-         * 		the ending point's x coordinate.
-         * @param y1
-         * 		the ending point's y coordinate.
-         */
-        public Vector(double x0, double y0, double x1, double y1) {
-            startX = x0;
-            startY = y0;
-            endX = x1;
-            endY = y1;
-        }
-
-        public Vector(Vector v) {
-            startX = v.startX;
-            startY = v.startY;
-            endX = v.endX;
-            endY = v.endY;
-        }
-
-        /**
-         * Adds a given Vector to the calling Vector instance, shifting the
-         * calling Vector's coordinates by the specified amounts.
-         * @param v
-         *      the Vector that should be added to the calling Vector.
-         */
-        public void add(Vector v) { add(v.startX, v.startY, v.endX, v.endY); }
-        
-        /**
-         * Adds a set of scalars to the calling Vector instance, shifting the
-         * calling Vector's coordinates by the specified amounts.
-         * @param x0
-         * 		the origin x shift.
-         * @param y0
-         * 		the origin y shift.
-         * @param x1
-         * 		the heading x shift.
-         * @param y1
-         * 		the heading y shift.
-         */
-        public void add(double x0, double y0, double x1, double y1) {
-        	startX += x0;
-        	startY += y0;
-        	endX += x1;
-        	endY += y1;
-        }
-
-        /**
-         * Multiplies a scalar to both the starting and ending points of the Vector.
-         * @param factor
-         * 		the factor to multiply throughout the Vector.
-         */
-        public void multiply(double factor) {
-            startX *= factor;
-            startY *= factor;
-            endX *= factor;
-            endY *= factor;
-        }
-
-        /**
-         * Flips the current Vector's heading in the opposite direction while maintaining
-         * the starting point's x and y coordinates.
-         */
-        public void reverse() {
-            endX *= -1;
-            endY *= -1;
-        }
-
-        /**
-         * Copies the values from a given Vector to the calling instance.
-         * @param v
-         * 		the Vector to take values from.
-         */
-        public void updateFrom(Vector v) {
-            startX = v.startX;
-            startY = v.startY;
-            endX = v.endX;
-            endY = v.endY;
-        }
-
-        /**
-         * Sets the vector's magnitude to the specified value.
-         * @param magnitude
-         * 		the new length of the vector.
-         */
-        public void changeMagnitude(double magnitude) {
-            // Calculate new coordinates
-            Vector unitV = getUnitVector();
-            unitV.multiply(magnitude);
-            // Update coords
-            endX = startX + (unitV.endX - unitV.startX);
-            endY = startY + (unitV.endY - unitV.startY);
-        }
-        
-        /**
-         * Changes the starting coordinates to the given x and y value. The
-         * heading coordinates will also relocate to maintain the
-         * magnitude of the Vector.
-         * @param x
-         * 		the new x location.
-         * @param y
-         * 		the new y location.
-         */
-        public void rebase(double x, double y) {
-        	endX += x - startX;
-        	endY += y - startY;
-        	startX = x;
-        	startY = y;
-        }
-
-        /**
-         * Gets a unit vector based off of the calling instance's heading. If
-         * the calling Vector has a magnitude of 0, then a unit vector of the
-         * same magnitude is produced.
-         * @return
-         * 		the unit vector.
-         */
-        public Vector getUnitVector() {
-            double magnitude = getMagnitude();
-            double x1 = endX - startX;
-            double y1 = endY - startY;
-            // Prevent division by 0
-            if (magnitude == 0) return new Vector(x1, y1);
-            return new Vector(x1 / magnitude, y1 / magnitude);
-        }
-
-        /**
-         * Gets the magnitude of the Vector. This is also known as the distance
-         * between the two points that define the Vector.
-         * @return
-         * 		the magnitude.
-         */
-        public double getMagnitude() {
-            return Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-        }
-
-        /**
-         * Returns the x coordinate of the Vector's normal.
-         * @return
-         * 		the normal's x coordinate.
-         */
-        public double getNormalX() { return (endY - startY) * -1; }
-
-        /**
-         * Returns the y coordinate of the Vector's normal.
-         * @return
-         * 		the normal's y coordinate.
-         */
-        public double getNormalY() { return (endX - startX); }
-        
-        /**
-         * Gets the x location.
-         * @return
-         * 		the x coordinate.
-         */
-        public double getX() { return startX; }
-
-        /**
-         * Gets the y location.
-         * @return
-         * 		the y coordinate.
-         */
-        public double getY() { return startY; }
-
-        /**
-         * Gets the x coordinate denoting the heading of the Vector. That is,
-         * this method returns the x coordinate that is not the starting
-         * point for this Vector.
-         * @return
-         * 		the x heading.
-         */
-        public double getEndX() { return endX; }
-
-        /**
-         * Gets the y coordinate denoting the heading of the Vector. That is,
-         * this method returns the y coordinate that is not the starting
-         * point for this Vector.
-         * @return
-         * 		the y heading.
-         */
-        public double getEndY() { return endY; }
+    public void setEnableGravity(boolean enable) {
+    	mEnableGravity = enable;
     }
 
 }

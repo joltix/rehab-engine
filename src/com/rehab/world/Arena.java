@@ -1,6 +1,5 @@
 package com.rehab.world;
 
-import com.rehab.world.Phys.Vector;
 
 public class Arena {
 
@@ -12,10 +11,11 @@ public class Arena {
 	// Title of the level
 	private String mName;
 	// Default gravity is at Earth level
-	private Vector mGrav;
+	private Vector2D mGrav = new Vector2D(0, 0);
 
 	// Entities to keep track of (those in the level)
-	private Iterable<Entity> mEntities;
+	private Iterable<Actor> mActList;
+	private Iterable<Projectile> mProjList;
 	private Actor mPlayer;
 
 	/**
@@ -34,8 +34,7 @@ public class Arena {
 
 		// Setup gravity Vector
 		double gravStrength = Physics.getPlanetGravity(Physics.EARTH_MASS, Physics.EARTH_RADIUS);
-		mGrav = new Vector();
-		mGrav.updateFrom(Phys.UNIT_SOUTH);
+		mGrav.updateFrom(Vector2D.UNIT_SOUTH);
 		mGrav.changeMagnitude(gravStrength);
 	}
 	
@@ -44,7 +43,7 @@ public class Arena {
 	 * @param tickRate
 	 * 		a fraction of a second.
 	 */
-	public void setTime(double tickRate) { mUnitTime = 1d / tickRate; }
+	public void setDeltaTime(double tickRate) { mUnitTime = tickRate; }
 
 	/**
 	 * [INCOMPLETE] Calculates the level's current game state. This includes instance locations, health
@@ -53,44 +52,103 @@ public class Arena {
 	 * Once an Entity reaches the floor of the Arena (getHeight() = 0), nothing more can
 	 * be said of what will occur.
 	 */
-	public void step() {
-		for (Entity e : mEntities) {
+	public void stepActors() {
+		for (Actor a : mActList) {
 
+			// Print dummy location
+//			if (a.getId() == 2) {
+//				System.out.printf("Dummy location (%f, %f)\n", a.getX(), a.getY());
+//				for (Vector2D edge : a.getCollision().edges()) {
+//					System.out.printf("    Edge: %s\n", edge);
+//				}
+//			}
+			
 			// Disable objects beyond the screen
-			if (isOutside(e))
-				disable(e);
+			if (isOutside(a)) {
+				System.out.println("Disabled obj: " + a.getId());
+				a.disable();
+			}
 			
 			// Apply gravity
-			if (e.isGravityEnabled()) {
-				applyGravity(e);
-				for (Entity other : mEntities) {
-					// Check collisions
-					if (e == other) continue;
-					if (e.collidesWith(other)) {
-						// Snap object to floor
-						e.moveTo(e.getX(), other.getY() + e.getHeight());
-						e.setEnableGravity(false);
-					}
+			if (a.isGravityEnabled()) {
+				applyGravity(a);
+				for (Entity other : mActList) {
+					// Skip collision with itself
+					if (a == other) continue;
+//					if (a.collidesWith(other)) {
+//						System.out.printf("Actor collision: [%d] (%f, %f) with [%d]\n", a.getId(), a.getX(), a.getY(), other.getId());
+//						// Snap object to floor
+//						if (other == Main.getFloor()) {
+//							
+//							snapToFloor(a);
+//							a.setEnableGravity(false);
+//						}
+//						//a.moveTo(a.getX(), other.getY() + a.getHeight());
+//						//a.setEnableGravity(false);
+//					}
 				}
  			}
 			
 			// Snap the character to the surface of the floor if sinks
-			if (isBelow(e)) {
-				double h = e.getHeight();
-				e.moveTo(e.getX(), h);
-				e.setEnableGravity(false);
+			if (isBelow(a)) {
+				snapToFloor(a);
+				a.setEnableGravity(false);
+				System.out.printf("Actor below screen: %s\n", a);
 			}
 
 		}
 	}
+	
+	private void snapToFloor(Actor a) {
+		Actor floor = Main.getFloor();
+		a.moveTo(a.getX(), a.getHeight() + floor.getHeight());
+	}
 
+	public void stepProjectiles() {
+		for (Projectile p : mProjList) {
+
+			// Skip disabled projectiles
+			if (p.isDisabled()) {
+				continue;
+			}
+			
+			// Disable projectiles beyond the screen
+			if (isOutside(p)) {
+				System.out.printf("Projectile beyond screen! Disabling...\n");
+				p.disable();
+			} else {
+				
+				// Test collision with all Actor and disable projectile
+				boolean collides = false;
+//				for (Actor a : mActList) {
+//					
+//					if (a != Main.getFloor() && (collides = p.collidesWith(a))) {
+//						System.out.printf("Projectile[%d] collision with [%d]! Disabling Projectile %s\n", p.getId(), a.getId(), p);
+//						p.disable();
+//						break;
+//					}
+//				}
+				
+				// Move again only if no collision
+				if (!collides) {
+					Vector2D velo = p.getPhysics().getVelocity();
+					Vector2D direction = velo.getUnitVector();
+					//direction.multiply(p.getSpeed());
+					p.moveImpulse(direction);
+					//p.moveBy(1, 1);
+				}
+			}
+			
+		}
+	}
+	
 	/**
 	 * Applies the Arena's gravity vector to a given Entity.
-	 * @param e
-	 * 		the Entity to affect.
+	 * 
+	 * @param e	the Entity to affect.
 	 */
 	private void applyGravity(Entity e) {
-		Vector force = new Vector(mGrav);
+		Vector2D force = new Vector2D(mGrav);
 		// Scale force by time
 		force.multiply(mUnitTime);
 		e.moveImpulse(force);
@@ -118,22 +176,11 @@ public class Arena {
 	 */
 	private boolean isOutside(Entity e) {
 		double x = e.getX(), y = e.getY();
-		if (x + e.getWidth() < 0 || x > mWidth || y - e.getHeight() > mHeight || y < 0)
+		if (x + e.getWidth() < 0 || x > mWidth || y - e.getHeight() > mHeight || y < 0) {
+			System.out.printf("Projectile outside @ (%f, %f)\n", x, y);
 			return true;
+		}
 		return false;
-	}
-	
-	/**
-	 * Sets the Entity to no longer be drawn, disables gravity, and unloads the
-	 * instance with the InstanceManager.
-	 * @param e
-	 * 		the Entity to disable.
-	 */
-	private void disable(Entity e) {
-		e.setVisibility(false);
-		e.setEnableGravity(false);
-		// Take it out of the game
-		InstanceManager.getInstance().unload(e);
 	}
 
 	/**
@@ -146,9 +193,11 @@ public class Arena {
 	/**
 	 * Gets the magnitude of acceleration due to gravity for the particular level.
 	 * @return
-	 * 		a Vector representing gravity in meters per second squared.
+	 * 		a Vector2D representing gravity in meters per second squared.
 	 */
-	public Vector getGravity() { return mGrav; }
+	public Vector2D getGravity() {
+		return mGrav;
+	}
 
 	/**
 	 * Sets the Arena's level of gravity.
@@ -156,17 +205,21 @@ public class Arena {
 	 * 		the magnitude of gravity in meters per second squared.
 	 */
 	public void setGravity(double gravity) {
-		if (mGrav == null) mGrav = new Vector();
-		mGrav = new Vector();
-		mGrav.updateFrom(Phys.UNIT_SOUTH);
+		mGrav.changeMagnitude(gravity);
 	}
 
 	/**
 	 * Sets the Entities meant to appear in the level.
-	 * @param it
-	 * 		an Iterable of Entities in the level.
+	 * @param acts
+	 * 		an Iterable of Actors.
+	 * @param projs
+	 * 		an Iterable of Projectiles.
 	 */
-	public void setEntities(Iterable<Entity> iter) { mEntities = iter; }
+	public void setEntities(Iterable<Actor> acts, Iterable<Projectile> projs)
+	{
+		mActList = acts;
+		mProjList = projs;
+	}
 	
 	/**
 	 * Gets the user-controlled Actor.

@@ -97,23 +97,23 @@ public class Sprite {
 	 * @param offsetY
 	 */
 	public void draw(PixelWriter writer, int offsetX, int offsetY) {
-		int getPicNum = 0;
-
-		long currentTime = System.currentTimeMillis();
-		long duration = currentTime - localStartTime;
-
-		if (isFirstPic = true && buffer == reels.get(0)) {
-			startTime = 0;
-			buffer = reels.get(0);
-		}
-
-		// if start is equal or greater than the seconds then stop
-		if (duration >= getInterval(seconds) && startTime != 0) {
-			localStartTime = System.currentTimeMillis();
-			getPicNum++;
-			buffer = reels.get(getPicNum);
-			isFirstPic = true;
-		}
+//		int getPicNum = 0;
+//
+//		long currentTime = System.currentTimeMillis();
+//		long duration = currentTime - localStartTime;
+//
+//		if (isFirstPic = true && buffer == reels.get(0)) {
+//			startTime = 0;
+//			buffer = reels.get(0);
+//		}
+//
+//		// if start is equal or greater than the seconds then stop
+//		if (duration >= getInterval(seconds) && startTime != 0) {
+//			localStartTime = System.currentTimeMillis();
+//			getPicNum++;
+//			buffer = reels.get(getPicNum);
+//			isFirstPic = true;
+//		}
 
 		// Transfer pixels to the buffer's writer
 		PixelReader reader = buffer.getPixelReader();

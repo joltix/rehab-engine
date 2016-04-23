@@ -1,20 +1,22 @@
 package com.rehab.world;
 
-import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.rehab.animation.Drawable;
-import com.rehab.animation.Sprite;
+import com.rehab.world.Frame.Renderable;
 
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 
-public class RenderLoop extends Thread {
+public class ProtoRender extends Thread {
 
-	// Layers to sort game objects
-	private LayerManager mLayers = new LayerManager();
+	// Singleton instance
+	private static ProtoRender mInstance;
+	private static boolean mRunning;
+	
 
 	// Drawing surface and components
 	private Canvas mCanvas;
@@ -23,16 +25,25 @@ public class RenderLoop extends Thread {
 							mBuffer2 = new WritableImage(720, 480),
 							mSelBuffer = mBuffer1;
 
-	// Singleton instance
-	private static RenderLoop mInstance;
-
+	
+	// Frame service
+	private FrameDepot mDepot = FrameDepot.getInstance();
+	// Layers to sort game objects
+	private LayerManager mLayers = new LayerManager();
+	private FPSLogger mLogger = new FPSLogger(ProtoRender.class.getCanonicalName());
+	
+	
 	// Loop control
 	private boolean mLoop = true;
-	private long mTarRate, mInterval;
+	private long mInterval;
+
 
 	// Drawing buffer for dynamically created game objects
-	private Queue<Drawable> mAddToDraw = new LinkedList<Drawable>();
-
+	private volatile ConcurrentLinkedQueue<Renderable> mAddToDraw = new ConcurrentLinkedQueue<Renderable>();
+	
+	// Frame buffer
+	private ConcurrentLinkedQueue<Frame> mFrameBuffer = new ConcurrentLinkedQueue<Frame>();
+	
 	/**
 	 * Gets an instance of the RenderLoop. This method should only be used when {@link #getInstance(int, Canvas)}
 	 * has already been called. Using this method first will throw an IllegalStateException.
@@ -40,8 +51,8 @@ public class RenderLoop extends Thread {
 	 * @return	the RenderLoop instance.
 	 * @throws IllegalStateException	if {@link #getInstance(int, Canvas)} has never been called.
 	 */
-	public static RenderLoop getInstance() {
-		synchronized (RenderLoop.class) {
+	public static ProtoRender getInstance() {
+		synchronized (ProtoRender.class) {
 			if (mInstance == null) throw new IllegalStateException("getInstance(int, Canvas) has never been called");
 			return mInstance;
 		}
@@ -55,9 +66,9 @@ public class RenderLoop extends Thread {
 	 * @param fps	the desired frames per second.
 	 * @param arena	the Canvas to draw on.
 	 */
-	public static RenderLoop getInstance(int fps, Canvas c) {
-		synchronized (RenderLoop.class) {
-			if (mInstance == null) mInstance = new RenderLoop(fps, c);
+	public static ProtoRender getInstance(int fps, Canvas c) {
+		synchronized (ProtoRender.class) {
+			if (mInstance == null) mInstance = new ProtoRender(fps, c);
 			return mInstance;
 		}
 	}
@@ -69,7 +80,20 @@ public class RenderLoop extends Thread {
 	 */
 	public static boolean isRunning() {
 		if (mInstance == null) return false;
-		return mInstance.isAlive();
+		return ProtoRender.mRunning;
+	}
+	
+	
+
+	@Override
+	public void start() {
+		ProtoRender.mRunning = true;
+		super.start();
+	}
+
+	public void halt() {
+		ProtoRender.mRunning = true;
+		//super.stop();
 	}
 
 	/**
@@ -80,17 +104,14 @@ public class RenderLoop extends Thread {
 	 * @throws IllegalArgumentException	if the desired fps is not greater
 	 * than 0.
 	 */
-	private RenderLoop(int fps, Canvas c) {
+	private ProtoRender(int fps, Canvas c) {
 		if (fps <= 0) {
 			throw new IllegalArgumentException("Target framerate should be greater than 0");
 		}
 		mCanvas = c;
 		mGfx = mCanvas.getGraphicsContext2D();
-		// Loop time control
-		mTarRate = fps;
-		mInterval = 1000000000 / mTarRate;
 	}
-
+	
 	/**
 	 * Add all Drawables to be drawn. This method must only be called once - before
 	 * calls to {@link #isRunning()} return true.
@@ -106,21 +127,22 @@ public class RenderLoop extends Thread {
 		InstanceManager instaMan = InstanceManager.getInstance();
 		// Load actors
 		for (Actor a : instaMan.getLoadedActors()) {
-			//System.out.printf("Loading Actor %s\n", a);
 			mLayers.add(new Renderable(a));
 		}
 		// Load projectiles
 		for (Projectile p : instaMan.getLoadedProjectiles()) {
-			//System.out.printf("Loading Projectile %s\n", p);
 			mLayers.add(new Renderable(p));
 		}
 		// Load props
 		for (Prop p : instaMan.getLoadedProps()) {
-			//System.out.printf("Loading Prop %s\n", p);
 			mLayers.add(new Renderable(p));
 		}
 	}
-
+	
+	public void requestDraw(Frame frame) {
+		mFrameBuffer.add(frame);
+	}
+	
 	/**
 	 * Enqueues a Drawable to be drawn in the next draw frame. This method
 	 * should be used to submit a game object for rendering after
@@ -132,58 +154,66 @@ public class RenderLoop extends Thread {
 	 * @see #start()
 	 */
 	public void requestDraw(Drawable drawable) {
-		mAddToDraw.add(drawable);
+		mAddToDraw.add(new Renderable(drawable));
 	}
-
+		
 	@Override
 	public void run() {
-		super.run();
-
+		
 		while (mLoop) {
 			long frameStart = System.nanoTime();
-
-			// Swap buffers to work on
-			if (mSelBuffer == mBuffer1) mSelBuffer = mBuffer2;
-			else mSelBuffer = mBuffer1;
-
-			PixelWriter writer = mSelBuffer.getPixelWriter();
-			// Clear the buffer from previous display
-			clearBuffer(writer);
-
-
-			// Draw all layers
-			drawLayer(LayerManager.LAYER_BACKGROUND, writer);
-			drawLayer(LayerManager.LAYER_FREE_2, writer);
-			drawLayer(LayerManager.LAYER_FREE_1, writer);
-			drawLayer(LayerManager.LAYER_PROP, writer);
-			drawLayer(LayerManager.LAYER_GUI, writer);
 			
+			Frame frame = mFrameBuffer.poll();
+			if (frame != null) {
+				mFrameBuffer.clear();
+				//mLogger.begin();
+				
+				// Swap buffers to work on
+				if (mSelBuffer == mBuffer1) mSelBuffer = mBuffer2;
+				else mSelBuffer = mBuffer1;
+		
+				PixelWriter writer = mSelBuffer.getPixelWriter();
+				// Clear the buffer from previous display
+				clearBuffer(writer);
+		
+		
+				// Draw all layers
+				drawLayer(LayerManager.LAYER_BACKGROUND, writer);
+				drawLayer(LayerManager.LAYER_FREE_2, writer);
+				drawLayer(LayerManager.LAYER_FREE_1, writer);
+				drawLayer(LayerManager.LAYER_PROP, writer);
+				drawLayer(LayerManager.LAYER_GUI, writer);
+				
+				// Sort to layers
+				for (Renderable renderable : frame.renderables()) {
+					mLayers.add(renderable);
+				}
+		
+				// Set the buffer to be displayed on-screen
+				mGfx.drawImage(mSelBuffer, 0, 0);
+				
+				
+				// Skip next frame if previous took too long
+				long frameDur = System.nanoTime() - frameStart;
+				mDepot.recycleFrame(frame);
+				
+				//System.out.printf("Frame duration: %d\n", frameDur);
+				if (frameDur > mInterval) {
+					try {
+						Thread.sleep((frameDur - mInterval) / 1000000);
+					} catch (InterruptedException e) { e.printStackTrace(); }
+				} else if (frameDur < mInterval) {
+					try {
+						Thread.sleep((mInterval - frameDur) / 1000000);
+					} catch (InterruptedException e) { e.printStackTrace(); }
+				}
+				//mLogger.end();
+			}
 			
-			// Add new Drawables for next draw loop
-			Drawable drawable;
-			while ((drawable = mAddToDraw.poll()) != null) {
-				mLayers.add(new Renderable(drawable));
-			}
-
-			// Set the buffer to be displayed on-screen
-			mGfx.drawImage(mSelBuffer, 0, 0);
-
-			// Skip next frame if previous took too long
-			long frameDur = System.nanoTime() - frameStart;
-			if (frameDur > mInterval) {
-				try {
-					Thread.sleep((frameDur - mInterval) / 1000000);
-				} catch (InterruptedException e) { e.printStackTrace(); }
-			} else if (frameDur < mInterval) {
-				try {
-					Thread.sleep((mInterval - frameDur) / 1000000);
-				} catch (InterruptedException e) { e.printStackTrace(); }
-			}
 
 		}
-
 	}
-	
+
 	/**
 	 * Draws the layer specified by a given layer constant.
 	 * 
@@ -228,25 +258,11 @@ public class RenderLoop extends Thread {
 	private void drawToBuffer(Renderable obj, PixelWriter writer) {
 
 		// Get location offset relative to overall screen
-		int offX = (int) Math.floor(obj.x);
-		int offY = (int) Math.floor((480 - obj.y));
-
-		obj.sprite.draw(writer, offX, offY);
+		int offX = (int) Math.floor(obj.getX());
+		int offY = (int) Math.floor((480 - obj.getY()));
+		
+		obj.getSprite().draw(writer, offX, offY);
 	}
 	
-	public class Renderable {
-		
-		public Sprite sprite;
-		public double x, y;
-		public int z;
-		
-		public Renderable(Drawable drawable) {
-			sprite = drawable.getSprite();
-			this.x = drawable.getX();
-			this.y = drawable.getY();
-			this.z = drawable.getZ();
-		}
-	}
-
-
+	
 }
