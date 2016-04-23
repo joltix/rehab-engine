@@ -16,14 +16,36 @@ public class Phys {
 	private Point mLastLocation = new Point(0, 0);
 
     // Flags
-    private boolean mEnableGravity = true;
+    private boolean mEnableGravity = false;
 
     /**
      * Basic constructor for a Phys using (at a minimum) mass without a set velocity.
-     * @param mass
-     * 		the object's mass in kilograms.
+     * 
+     * @param mass	the object's mass in kilograms.
      */
-    public Phys(double mass) { mMass = mass; }
+    public Phys(double mass) {
+    	mMass = mass;
+    }
+    
+    /**
+     * Constructor for cloning a Phys. The new Phys will have all the same values
+     * for its properties as the Phys that is given as an argument.
+     * 
+     * @param phys	the Phys to clone.
+     */
+    public Phys(Phys phys) {
+    	// Copy velocity
+    	mLastVelocity = new Vector2D(phys.mLastVelocity);
+    	mVelocity = new Vector2D(phys.mVelocity);
+    	// Copy stats
+    	mMass = phys.mMass;
+    	mSpeed = phys.mSpeed;
+    	// Copy location
+    	mLocation = new Point(phys.mLocation);
+    	mLastLocation = new Point(phys.mLastLocation);
+    	// Copy flags
+    	mEnableGravity = phys.mEnableGravity;
+    }
 
 	/**
 	 * Applies a velocity vector to move the instance along. The Vector to add
