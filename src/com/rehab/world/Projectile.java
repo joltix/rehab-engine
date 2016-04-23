@@ -3,18 +3,31 @@ package com.rehab.world;
 
 public class Projectile extends Entity {
 
+	private static final double MASS = 0.1;
+	private static final double HEALTH_MAX = 1;
+	
 	public static final double DAMAGE_DEFAULT = 1d;
-
+	
 	private Actor mOwner;
 	private double mDamage = 1;
 
 	public Projectile(Actor owner, Hitbox h) {
-		super(0.01, 1);
+		super(MASS, HEALTH_MAX);
 		// Validate owner
 		if (owner == null) throw new IllegalArgumentException("Projectile must have an owner");
 
 		mOwner = owner;
 		setCollisionModel(h);
+	}
+	
+	/**
+	 * Constructor for a Projectile with the same
+	 * @param p
+	 */
+	public Projectile(Projectile p) {
+		super(p);
+		mOwner = p.mOwner;
+		mDamage = p.mDamage;
 	}
 	
 	
