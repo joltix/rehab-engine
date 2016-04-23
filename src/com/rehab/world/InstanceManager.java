@@ -30,14 +30,10 @@ import com.rehab.animation.Sprite;
  * </p>
  *
  */
-public class InstanceManager {
+public class InstanceManager extends Register {
 
 	// The only instance allowed
 	private static InstanceManager mManager;
-
-	// All Entities created
-	private Hashtable<Integer, Entity> mGlobalInstanceTable = new Hashtable<Integer, Entity>();
-	private int mLatestUsedId = 1;
 
 	// Lookup table for Entities in the Arena
 	private Hashtable<Integer, Actor> mLoadedActTable = new Hashtable<Integer, Actor>();
@@ -53,7 +49,9 @@ public class InstanceManager {
 	 * Private constructor prevents direct instantiation and removes default
 	 * constructor from doc.
 	 */
-	private InstanceManager() {}
+	private InstanceManager() {
+		
+	}
 	
 	/**
 	 * Gets an instance of the InstanceManager.
@@ -83,6 +81,20 @@ public class InstanceManager {
 		register(a);
 		return a;
 	}
+	
+	/**
+	 * Creates a new {@link Actor} instance with the same kind of physics
+	 * and collision model as a given Actor. This method should be used
+	 * to generate identical Actors with unique ids.
+	 *
+	 * @param a	the Actor to clone.
+	 * @return the Actor's clone.
+	 */
+	public Actor createActor(Actor a) {
+		Actor clone = new Actor(a);
+		register(clone);
+		return clone;
+	}
 
 	/**
 	 * Creates a new {@link Projectile} instance with a given owner {@link Actor} and
@@ -97,6 +109,20 @@ public class InstanceManager {
 	 */
 	public Projectile createProjectile(Actor owner, Hitbox collision) {
 		Projectile p = new Projectile(owner, collision);
+		register(p);
+		return p;
+	}
+	
+	/**
+	 * Creates a new {@link Projectile} instance with the same kind of physics
+	 * and collision model as a given Projectile. This method should be used
+	 * to generate identical Projectiles with unique ids.
+	 *
+	 * @param p	the Projectile to clone.
+	 * @return the Projectile's clone.
+	 */
+	public Projectile createProjectile(Projectile projectile) {
+		Projectile p = new Projectile(projectile);
 		register(p);
 		return p;
 	}
@@ -120,19 +146,19 @@ public class InstanceManager {
 	 * Registers the given Actor with the game's global Actor list.
 	 * 
 	 * @param a	the Actor to register.
-	 * @return	true if the given Actor was successfully added to the global
-	 * list, false if the Actor was already registered previously.
+	 * @return the id of the Actor if the given Actor was successfully added to the global
+	 * list, {@link Register#UNREGISTERED} if the Actor was already registered previously.
 	 * @see #isRegistered(int)
 	 * @see #unregister(Entity)
 	 */
-	private boolean register(Actor a) {
+	private int register(Actor a) {
 		synchronized (mManager) {
-			if (mGlobalInstanceTable.contains(a)) return false;
-			// Assign new id
-			int id = generateNewId();
-			a.setId(id);
+			// Don't re-register
+			if (getItem(a.getId()) != null) {
+				return Register.UNREGISTERED;
+			}
 			// Add to global lookup
-			mGlobalInstanceTable.put(id, a);
+			int id = putItem(a);
 
 			// Auto load into game if already began
 			if (ProtoRender.isRunning()) {
@@ -141,29 +167,27 @@ public class InstanceManager {
 			}
 
 			mNumActors++;
-			return true;
+			return id;
 		}
 	}
-
+	
 	/**
 	 * Registers the given Projectile with the game's global Projectile list.
 	 * 
 	 * @param p	the Projectile to register.
-	 * @return	true if the given Projectile was successfully added to the global
-	 * list, false if the Projectile was already registered previously.
+	 * @return the id of the Projectile if the given Projectile was successfully added to the global
+	 * list, {@link Register#UNREGISTERED} if the Projectile was already registered previously.
 	 * @see #isRegistered(int)
 	 * @see #unregister(Entity)
 	 */
-	private boolean register(Projectile p) {
+	private int register(Projectile p) {
 		synchronized (mManager) {
-			if (mGlobalInstanceTable.contains(p)) {
-				return false;
+			// Don't re-register
+			if (getItem(p.getId()) != null) {
+				return Register.UNREGISTERED;
 			}
-			// Assign new id
-			int id = generateNewId();
-			p.setId(id);
 			// Add to global lookup
-			mGlobalInstanceTable.put(id, p);
+			int id = putItem(p);
 
 			// Auto load into game if already began
 			if (ProtoRender.isRunning()) {
@@ -172,29 +196,27 @@ public class InstanceManager {
 			}
 
 			mNumProjs++;
-			return true;
+			return id;
 		}
 	}
 	
 	/**
-	 * Registers the given Projectile with the game's global Prop list.
+	 * Registers the given Prop with the game's global Prop list.
 	 * 
-	 * @param p	the Projectile to register.
-	 * @return	true if the given Projectile was successfully added to the global
-	 * list, false if the Projectile was already registered previously.
+	 * @param p	the Prop to register.
+	 * @return the id of the Prop if the given Prop was successfully added to the global
+	 * list, {@link Register#UNREGISTERED} if the Prop was already registered previously.
 	 * @see #isRegistered(int)
 	 * @see #unregister(Entity)
 	 */
-	private boolean register(Prop p) {
+	private int register(Prop p) {
 		synchronized (mManager) {
-			if (mGlobalInstanceTable.contains(p)) {
-				return false;
+			// Don't re-register
+			if (getItem(p.getId()) != null) {
+				return Register.UNREGISTERED;
 			}
-			// Assign new id
-			int id = generateNewId();
-			p.setId(id);
 			// Add to global lookup
-			mGlobalInstanceTable.put(id, p);
+			int id = putItem(p);
 
 			// Auto load into game if already began
 			if (ProtoRender.isRunning()) {
@@ -203,7 +225,7 @@ public class InstanceManager {
 			}
 
 			mNumProps++;
-			return true;
+			return id;
 		}
 	}
 
@@ -222,13 +244,12 @@ public class InstanceManager {
 			int id = a.getId();
 
 			// Fail if still loaded or not in global list
-			if (mLoadedActTable.containsKey(id) ||
-					!mGlobalInstanceTable.containsKey(id)) {
+			if (mLoadedActTable.containsKey(id) || getItem(id) == null) {
 				return false;
 			}
 
 			// Remove from global table if already unloaded
-			mGlobalInstanceTable.remove(id);
+			removeItem(id);
 			mNumActors--;
 			return true;
 		}
@@ -249,13 +270,12 @@ public class InstanceManager {
 			int id = p.getId();
 
 			// Fail if still loaded or not in global list
-			if (mLoadedProjTable.containsKey(id) ||
-					!mGlobalInstanceTable.containsKey(id)) {
+			if (mLoadedProjTable.containsKey(id) || getItem(id) == null) {
 				return false;
 			}
 
 			// Remove from global table if already unloaded
-			mGlobalInstanceTable.remove(id);
+			removeItem(id);
 			mNumProjs--;
 			return true;
 		}
@@ -276,13 +296,12 @@ public class InstanceManager {
 			int id = p.getId();
 
 			// Fail if still loaded or not in global list
-			if (mLoadedPropTable.containsKey(id) ||
-					!mGlobalInstanceTable.containsKey(id)) {
+			if (mLoadedPropTable.containsKey(id) || getItem(id) == null) {
 				return false;
 			}
 
 			// Remove from global table if already unloaded
-			mGlobalInstanceTable.remove(id);
+			removeItem(id);
 			mNumProps--;
 			return true;
 		}
@@ -300,8 +319,7 @@ public class InstanceManager {
 	public boolean load(Actor a) {
 		synchronized (mManager) {
 			int id = a.getId();
-			if (!mGlobalInstanceTable.containsKey(id) ||
-					mLoadedActTable.containsKey(id)) {
+			if (getItem(id) == null || mLoadedActTable.containsKey(id)) {
 				return false;
 			}
 			
@@ -322,8 +340,7 @@ public class InstanceManager {
 	public boolean load(Projectile p) {
 		synchronized (mManager) {
 			int id = p.getId();
-			if (!mGlobalInstanceTable.containsKey(id) ||
-					mLoadedProjTable.containsKey(id)) {
+			if (getItem(id) == null || mLoadedProjTable.containsKey(id)) {
 				return false;
 			}
 
@@ -344,8 +361,7 @@ public class InstanceManager {
 	public boolean load(Prop p) {
 		synchronized (mManager) {
 			int id = p.getId();
-			if (!mGlobalInstanceTable.containsKey(id) ||
-					mLoadedPropTable.containsKey(id)) {
+			if (getItem(id) == null || mLoadedPropTable.containsKey(id)) {
 				return false;
 			}
 
@@ -389,7 +405,7 @@ public class InstanceManager {
 	 * @see #register(Prop)
 	 */
 	public boolean isRegistered(int id) {
-		return mGlobalInstanceTable.containsKey(id);
+		return getItem(id) != null;
 	}
 
 	/**
@@ -517,52 +533,6 @@ public class InstanceManager {
 		int proj = loadedProjectileCount();
 		int prop = loadedPropCount();
 		return act + proj + prop;
-	}
-
-	/**
-	 * Creates an instance id to be used when registering an
-	 * Entity with the InstanceManager's global instance list.
-	 * Unless manually set, an Entity's id number is guaranteed
-	 * to not be used by any other Entity registered with the
-	 * InstanceManager.
-	 * 
-	 * @return	a unique integer id to identify an instance.
-	 */
-	private int generateNewId() {
-		synchronized (mManager) {
-			int id = mLatestUsedId;
-			mLatestUsedId++;
-			return id;
-		}
-	}
-
-	/**
-	 * Super class for {@link Entity} that allows {@link InstanceManager} exclusive access
-	 * to set an Entity's unique ID. This class facilitates the InstanceManager's registration
-	 * of an Entity's uniqueness in the game.
-	 */
-	protected static abstract class IdentifiableEntity {
-
-		// Entity id
-		private int mId;
-
-		/**
-		 * Sets an instance's unique identifier.
-		 * 
-		 * @param id	the unique identifier for the instance.
-		 */
-		protected void setId(int id) {
-			mId = id;
-		}
-
-		/**
-		 * Gets an instance's unique identifier.
-		 * 
-		 * @return	the unique identifier for the instance.
-		 */
-		public int getId() {
-			return mId;
-		}
 	}
 
 }
