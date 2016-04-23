@@ -12,9 +12,18 @@ public class Actor extends Entity implements Combatant {
 	public Actor(double mass, double healthCap) {
 		super(mass, healthCap);
 	}
+	
+	public Actor(Actor a) {
+		super(a);
+		if (isArmed()) {
+			mWeapon = new Weapon(a.mWeapon);
+		}
+	}
 
 	public void arm(double projSpd, double projDmg, double projSize) {
-		mWeapon = new Weapon(this, projSpd, projDmg, new Hitbox(0, 0, projSize));
+		
+		Projectile proj = InstanceManager.getInstance().createProjectile(this, new Hitbox(0, 0, projSize));
+		mWeapon = new Weapon(this, projSpd, projDmg, proj);
 	}
 	
 	public void setProjectileSprite(Sprite sprite) {
