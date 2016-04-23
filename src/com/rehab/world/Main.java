@@ -18,6 +18,7 @@ import javafx.stage.Stage;
 public class Main extends Application {
 	
 	private static Actor mFloor;
+	private static Actor mDummy;
 
 	public static void main(String[] args) {
 		Application.launch(args);
@@ -25,6 +26,10 @@ public class Main extends Application {
 
 	public static Actor getFloor() {
 		return mFloor;
+	}
+	
+	public static Actor getDummy() {
+		return mDummy;
 	}
 
 	@Override
@@ -55,7 +60,7 @@ public class Main extends Application {
 		//RenderLoop render = RenderLoop.getInstance(50, canvas);
 		ProtoRender render = ProtoRender.getInstance(60, canvas);
 
-		System.setProperty("sun.java2d.opengl", "true");
+
 		
 		// Prep game objs for drawing then begin
 		render.loadLayers();
@@ -144,6 +149,8 @@ public class Main extends Application {
 		a.arm(1, 5, 32);
 		a.setProjectileSprite(new Sprite("git_icon.jpg"));
 
+		a.setEnableGravity(true);
+		
 		// Make object known to manager
 		instaMan.load(a);
 		return a;
@@ -151,14 +158,19 @@ public class Main extends Application {
 
 	private Actor initDummy() {
 		InstanceManager instaMan = InstanceManager.getInstance();
-		Actor a = instaMan.createActor(62, 100);
-		a.setCollisionModel(new Hitbox(0, 0, 32, 32));
-		a.moveTo(360, 480);
-		a.setSprite(new Sprite("git_icon.jpg"));
+		mDummy = instaMan.createActor(62, 100);
+		mDummy.setCollisionModel(new Hitbox(0, 0, 32, 32));
+		mDummy.moveTo(360, 480);
+		mDummy.setSprite(new Sprite("git_icon.jpg"));
+		mDummy.setEnableGravity(true);
 
-		instaMan.load(a);
-		System.out.println("Dummy id: " + a.getId());
-		return a;
+		Actor clone = instaMan.createActor(mDummy);
+		clone.moveTo(128,  480);
+		instaMan.load(clone);
+		
+		instaMan.load(mDummy);
+		System.out.println("Dummy id: " + mDummy.getId());
+		return mDummy;
 	}
 
 }
