@@ -1,6 +1,5 @@
 package com.rehab.world;
 
-import com.rehab.animation.Sprite;
 
 /**
  * <p>
@@ -26,7 +25,7 @@ public class Weapon implements OnCollisionListener {
 	 * @param a	the owning Entity.
 	 * @param projSpd	speed of projectile.
 	 * @param projDmg	damage per projectile.
-	 * @param projCollision	Hitbox of projectile.
+	 * @param reference	a projectile to clone for new projectiles. to fire.
 	 * @throws IllegalArgumentException	if no owner is given, the projectile
 	 * speed is not greater than 0, or the projectile has no collision.
 	 */
@@ -65,15 +64,6 @@ public class Weapon implements OnCollisionListener {
     	mProjDamage = w.mProjDamage;
     }
 
-    /**
-     * Sets the Sprite to use for Projectiles fired by this Weapon.
-     * 
-     * @param s	the Sprite to use.
-     */
-	public void setProjectileSprite(Sprite s) {
-		mReferenceProj.setSprite(s);
-	}
-
 	/**
 	 * Sets the amount of damage done by each Projectile fired from this Weapon.
 	 * 
@@ -96,29 +86,14 @@ public class Weapon implements OnCollisionListener {
 		proj.moveTo(mOwner.getX(), mOwner.getY());
 		proj.setOnCollisionListener(this);
 		
-		// Calc velocity
-		Vector2D dir = orientRound(proj, x, y);
-
-        // Accelerate the round
-        proj.moveImpulse(dir);
-    }
-    
-    /**
-     * Gives a Projectile a direction toward a set of coordinates using the
-     * Weapon's currently set speed.
-     *
-     * @param p	the Projectile.
-     * @param x	the target direction's x value.
-     * @param y	the target direction's y value.
-     * @return the Vector2D describing the velocity.
-     */
-    private Vector2D orientRound(Projectile p, double x, double y) {
-        // Set velocity
-		Vector2D heading = new Vector2D(p.getX(), p.getY(), x - (p.getWidth() / 2), y + (p.getHeight() / 2));
-        heading = heading.getUnitVector();
-        heading.changeMagnitude(mProjSpeed);
-        heading.rebase(0, 0, true);
-        return heading;
+		// Compute path and speed of projectile
+		Phys phys = proj.getPhysics();
+		double normalizedX = x - mOwner.getXCentered();
+		double normalizedY = y - mOwner.getYCentered();
+		
+		// Apply new direction
+		phys.setAcceleration(50);
+		phys.setVelocity(normalizedX, normalizedY, 1);
     }
 
 	@Override
