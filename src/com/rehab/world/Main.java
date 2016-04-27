@@ -142,14 +142,16 @@ public class Main extends Application {
 		Actor a = instaMan.createActor(62, 100);
 		
 		a.setCollisionModel(new Hitbox(0, 0, 32, 32));
+		a.setEnableGravity(true);
 		a.moveTo(0, 480);
 		a.setSprite(new Sprite("git_icon.jpg"));
-				
+		
+		// Setup projectile
+		Projectile proj = instaMan.createProjectile(a, new Hitbox(0, 0, 24));
+		proj.setSprite(new Sprite("git_icon.jpg"));
+		
 		// Setup weapon
-		a.arm(1, 5, 32);
-		a.setProjectileSprite(new Sprite("git_icon.jpg"));
-
-		a.setEnableGravity(true);
+		a.arm(1, 5, proj);
 		
 		// Make object known to manager
 		instaMan.load(a);
