@@ -2,21 +2,40 @@ package com.rehab.world;
 
 import com.rehab.world.Vector2D.Point;
 
+/**
+ * <p>
+ * Representation of a game object's location as it relates to movement in the game world.
+ * Phys allows for a game object to {@link #move()} from one location to the next. Motion
+ * can be applied using the following quantities: direction, speed, and acceleration, each
+ * of which have corresponding accessor methods.
+ * </p>
+ *
+ * <p>
+ * To enable motion, {@link #setVelocity(double, double, double)} must first be called.
+ * Subsequent calls to {@link #move()} will compute the new location based off of the
+ * defined velocity with an optional call to {@link #setAcceleration(double)}.
+ * </p>
+ */
 public class Phys {
 
-	private Vector2D mLastVelocity = new Vector2D(0, 0);
+	// Tickrate of loop
+	private static double mTimescale = 0;
 	
+	// Velocity
 	private Vector2D mVelocity = new Vector2D(0, 0);
+	private Vector2D mLastVelocity = new Vector2D(0, 0);
+		
+	// Current position
+	private Point mLocation = new Point(0, 0);
+	private Point mLastLocation = new Point(0, 0);
 	
     // Physics data
-    private double mMass;
-    private double mSpeed = 0;
-
-    private Point mLocation = new Point(0, 0);
-	private Point mLastLocation = new Point(0, 0);
+	private double mMass;
+	private double mSpeed = 0;
+	private double mAcceleration = 0;
 
     // Flags
-    private boolean mEnableGravity = false;
+	private boolean mEnableGravity = false;
 
     /**
      * Basic constructor for a Phys using (at a minimum) mass without a set velocity.
@@ -46,24 +65,51 @@ public class Phys {
     	// Copy flags
     	mEnableGravity = phys.mEnableGravity;
     }
+    
+    /**
+	 * Sets the fraction of time to be used in physics operations.
+	 *
+	 * @param scale	the percentage of a "moment" in reality, depending
+	 * on the unit of time defined as a moment.
+	 */
+	public static void syncTimescale(double scale) {
+		if (mTimescale != 0) {
+			throw new IllegalStateException("Timescale must only be set once");
+		}
+		if (mTimescale < 0 && mTimescale >= 1) {
+			throw new IllegalArgumentException("Timescale may only be < 0 or >= 1");
+		}
+		mTimescale = scale;
+	}
 
 	/**
-	 * Applies a velocity vector to move the instance along. The Vector to add
-	 * must start at origin.
-	 * 
-	 * @param velocity	the velocity Vector to affect the Entity.
-	 */
-    public void moveImpulse(Vector2D velocity) {
+     * Moves the Phys to the next location based off of the current velocity.
+     * If the speed is < 0.5 or > -0.5, this method has no effect and the
+     * Phys' previous velocity and location remains unchanged. To set an initial
+     * direction and speed for velocity, see {@link #setVelocity(double, double, double)}.
+     * 
+     * @see #moveBy(double, double)
+     * @see #moveTo(double, double)
+     */
+    public void move() {
+    	// Don't move if no speed
+    	if (mSpeed < 0.5 && mSpeed > -0.5) {
+    		return;
+    	}
+    	// Remember last location before move
     	saveState();
     	
-    	double x = mLocation.getX();
-    	double y = mLocation.getY();
-    	mVelocity.add(velocity);
-    	mSpeed = mVelocity.magnitude();
+    	// Accelerate
+    	mSpeed += mAcceleration;
+    	mVelocity.add(mSpeed);
     	
-    	// Move
-    	mLocation.setX(x + mVelocity.getX());
-    	mLocation.setY(y + mVelocity.getY());
+    	// Compute next location according to velocity
+    	double locationX = mLocation.getX() + mVelocity.getX();
+    	double locationY = mLocation.getY() + mVelocity.getY();
+    	    	
+    	// Change locations
+    	mLocation.setX(locationX);
+    	mLocation.setY(locationY);
     }
     
     /**
@@ -74,6 +120,8 @@ public class Phys {
      * @param y	the change in y.
      * @throws IllegalArgumentException	when either x or y-coordinate is equivalent to
      * {@link Double#NaN}.
+     * @see #move()
+     * @see #moveTo(double, double)
      */
     public void moveBy(double x, double y) {
     	ensureCoordinateValidity(x, y);
@@ -91,6 +139,8 @@ public class Phys {
 	 * @param y	the new y coordinate.
      * @throws IllegalArgumentException	when either x or y-coordinate is equivalent to
      * {@link Double#NaN}.
+     * @see #move()
+     * @see #moveBy(double, double)
 	 */
     public void moveTo(double x, double y) {
     	ensureCoordinateValidity(x, y);
@@ -146,14 +196,6 @@ public class Phys {
     public double getY() {
     	return mLocation.getY();
     }
-    
-    public double getLastX() {
-    	return mLastLocation.getX();
-    }
-    
-    public double getLastY() {
-    	return mLastLocation.getY();
-    }
 
     /**
      * Gets the current velocity vector. Altering the values of the returned
@@ -163,8 +205,7 @@ public class Phys {
      * @see #getHeading()
      * @see #getSpeed()
      */
-    public Vector2D getVelocity()
-    {
+    public Vector2D getVelocity() {
     	return new Vector2D(mVelocity);
     }
     
@@ -184,20 +225,120 @@ public class Phys {
 	 * 
 	 * @return	mass in kilograms.
 	 */
-    public double getMass() {
-    	return mMass;
-    }
+    public double getMass() { return mMass; }
 
 	/**
-	 * Gets the instance's speed.
+	 * Gets the speed used during move calls.
 	 * 
-	 * @return	speed in meters per second.
+	 * @return	speed in feet per second.
 	 * @see #getVelocity()
 	 */
-    public double getSpeed() {
-    	return mSpeed;
+    public double getSpeed() { return mSpeed; }
+    
+    /**
+     * Sets the speed to be used during move calls. If the current speed is 0, then
+     * this method does nothing since direction is not taken into account and so no
+     * state is saved. If {@link #isMoving()} returns false, then calling this function
+     * will have no effect. To set a path and travel speed, see {@link #setVelocity(double, double, double)}.
+	 * This method should be used to alter speed and not initialize it.
+     *
+     * @param speed	the speed in feet per second.
+     * @throw IllegalArgumentException	if the speed is < 0.
+     */
+    public void setSpeed(double speed) {
+    	if (speed < 0) {
+    		throw new IllegalArgumentException("Speed must not be negative");
+    	} else if (!isMoving()) {
+    		// Bail out if no speed (and thus no direction)
+    		return;
+    	}
+    	// Save velocity as past
+    	saveState();
+    	
+    	// Update speed
+    	mSpeed = speed;
+    	mVelocity.changeMagnitude(speed);
+    }
+    
+    
+    /**
+	 * Sets the direction quantity of the current velocity while preserving the
+	 * speed. If {@link #isMoving()} returns false, then calling this function will
+	 * have no effect. To set a path and travel speed, see {@link #setVelocity(double, double, double)}.
+	 * This method should be used to alter direction and not initialize it.
+	 *
+	 * @param x	the x-coordinate of the direction.
+	 * @param y	the y-coordinate of the direction.
+	 */
+	public void setDirection(double x, double y) {
+		if (!isMoving()) {
+			return;
+		}
+		saveState();
+		
+		// Update direction
+		Point headPoint = mVelocity.getPoint();
+		headPoint.setX(x);
+		headPoint.setY(y);
+		
+		// Apply original speed
+		mVelocity.changeMagnitude(mSpeed);
+	}
+
+	/**
+	 * Sets the direction and speed of the Projectile. The x and y-coordinates
+	 * specified will not imply a certain magnitude based off of the current
+	 * location and the new direction. The speed parameter determines the
+	 * magnitude of the direction. This method will save the Phys' previous
+	 * state.
+	 *
+	 * @param x	the target location's x-coordinate.
+	 * @param y	the target location's y-coordinate.
+	 * @param speed	magnitude of vector.
+	 * @throws IllegalArgumentException	if speed < 0
+	 */
+	public void setVelocity(double x, double y, double speed) {
+    	if (speed < 0) {
+    		throw new IllegalArgumentException("Speed must not be negative");
+    	}
+    	saveState();
+    	
+    	// Update direction
+    	Point heading = mVelocity.getPoint();
+    	heading.setX(x);
+    	heading.setY(y);
+    	
+    	// Update speed
+    	mSpeed = speed;
+    	mVelocity.changeMagnitude(speed);
     }
 
+    /**
+     * Gets the acceleration used during move calls.
+     *
+     * @return	acceleration in feet per second per second.
+     */
+    public double getAcceleration() { return mAcceleration; }
+    
+	/**
+	 * Sets the acceleration to be used during move calls.
+	 *
+	 * @param acceleration	the acceleration in feet per second per second.
+	 */
+	public void setAcceleration(double acceleration) {
+		mAcceleration = acceleration * mTimescale;
+	}
+	
+	/**
+	 * Checks whether or not the instance's velocity is non-zero. If this method
+	 * returns true, sebsequent calls to {@link #move()} will have no effect.
+	 *
+	 * @return true if the Phys has a non-zero speed, false otherwise.
+	 */
+	public boolean isMoving() {
+		return mSpeed > 0;
+	}
+	
 	/**
 	 * Checks whether or not the instance is affected by gravity.
 	 * @return
