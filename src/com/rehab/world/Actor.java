@@ -1,36 +1,49 @@
 package com.rehab.world;
 
-import com.rehab.animation.Sprite;
-
 public class Actor extends Entity implements Combatant {
 
 	private OnDamageTakenListener mDamageTakenListener;
 	private OnDamageDealtListener mDamageDealtListener;
-
+	// Weapon for firing Projectiles
 	private Weapon mWeapon;
 
+	/**
+	 * Basic constructor for an unarmed Actor.
+	 * 
+	 * @param mass	the Actor's mass in kilograms.
+	 * @param healthCap	the maximum health.
+	 */
 	public Actor(double mass, double healthCap) {
 		super(mass, healthCap);
 	}
 	
+	/**
+	 * Constructor for cloning an Actor's properties. Everything from Hitbox to Phys
+	 * and Sprite are copied over.
+	 * 
+	 * @param a	the Actor to clone.
+	 */
 	public Actor(Actor a) {
 		super(a);
-		if (isArmed()) {
+		// Copy Weapon if possible
+		if (a.isArmed()) {
 			mWeapon = new Weapon(a.mWeapon);
 		}
 	}
 
-	public void arm(double projSpd, double projDmg, double projSize) {
+	public void arm(double projSpd, double projDmg, Projectile reference) {
 		
-		Projectile proj = InstanceManager.getInstance().createProjectile(this, new Hitbox(0, 0, projSize));
+		Projectile proj = InstanceManager.getInstance().createProjectile(reference);
 		mWeapon = new Weapon(this, projSpd, projDmg, proj);
 	}
 	
-	public void setProjectileSprite(Sprite sprite) {
-		if (!isArmed())
-			throw new IllegalStateException("Actor must first be weaponized");
-		
-		mWeapon.setProjectileSprite(sprite);
+	/**
+	 * Checks whether or not the Actor is armed and capable of firing Projectiles.
+	 *
+	 * @return	true if the Actor can shoot, false otherwise.
+	 */
+	public boolean isArmed() {
+		return mWeapon != null;
 	}
 	
 	@Override
@@ -67,23 +80,6 @@ public class Actor extends Entity implements Combatant {
 			throw new IllegalStateException("Actor has not yet been weaponized");
 		}
 		mWeapon.fireAt(x, y);
-	}
-	
-	public boolean isArmed() {
-		return mWeapon != null;
-	}
-
-	@Override
-	public String toString() {
-		StringBuilder builder = new StringBuilder("{ [");
-		builder.append(getId());
-		builder.append("] ");
-		builder.append('(');
-		builder.append(getX());
-		builder.append(", ");
-		builder.append(getY());
-		builder.append(") }");
-		return builder.toString();
 	}
 	
 }
