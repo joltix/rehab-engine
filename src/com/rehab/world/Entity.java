@@ -86,6 +86,20 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 		mDisabled = e.mDisabled;
 		mMovable = e.mMovable;	
 	}
+	
+	/**
+	 * Moves the Entity using the current values set in its Phys.
+	 * 
+	 * @throws IllegalStateException	if the Entity is set as immobile.
+	 * @see #moveBy(double, double)
+	 * @see #moveTo(double, double)
+	 */
+	public void move() {
+		ensureMobility();
+		
+		mPhys.move();
+		syncModels();
+	}
 
 	/**
 	 * Moves the Entity by some x and y values. Unlike moveTo(), this method shifts
@@ -95,8 +109,7 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 	 * 
 	 * @param x	the x value to shift by.
 	 * @param y	the y value to shift by.
-	 * @throws IllegalStateException	if the Entity is set
-	 * as immobile.
+	 * @throws IllegalStateException	if the Entity is set as immobile.
 	 * @see #moveImpulse(Vector)
 	 * @see #moveTo(double, double)
 	 */
@@ -104,24 +117,6 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 		ensureMobility();
 		
 		mPhys.moveBy(x, y);
-		syncModels();
-	}
-
-	/**
-	 * Applies a force {@link Vector2D} to move the instance along.
-	 * 
-	 * @param force	the Vector2D to affect the Entity.
-	 * @throws IllegalStateException	if the Entity is set
-	 * as immobile.
-	 * @see #moveBy(double, double)
-	 * @see #moveTo(double, double)
-	 */
-	public void moveImpulse(Vector2D force) {
-		ensureMobility();
-		
-		// Apply force
-		mPhys.moveImpulse(force);
-		// Synchronize physics and collision's new locations
 		syncModels();
 	}
 	
@@ -305,21 +300,45 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 	public void setSprite(Sprite sprite) { mSprite = sprite; }
 
 	/**
-	 * Gets the instance's x coordinate.
+	 * Gets the instance's x-coordinate.
 	 * 
 	 * @return	the x location.
 	 * @see #getY()
 	 */
-	public double getX() { return mPhys.getX(); }
+	public double getX() {
+		return mPhys.getX();
+	}
 
 	/**
-	 * Gets the instance's y coordinate.
+	 * Gets the instance's y-coordinate.
 	 * 
 	 * @return	the y location.
 	 * @see	#getX()
 	 */
-	public double getY() { return mPhys.getY(); }
+	public double getY() {
+		return mPhys.getY();
+	}
+	
+	/**
+	 * Gets the instance's center x-coordinate
+	 *
+	 * @return the center x.
+	 */
+	public double getXCentered() {
+		double w = this.getWidth();
+		return mPhys.getX() + (w / 2);
+	}
 
+	/**
+	 * Gets the instance's center y-coordinate.
+	 *
+	 * @return the center y.
+	 */
+	public double getYCentered() {
+		double h = this.getWidth();
+		return mPhys.getY() - (h / 2);
+	}
+	
 	/**
 	 * Gets the collidable width of the instance in pixels. If the Entity has no collision
 	 * model set, this method retrieves the width of the Entity's Sprite. If neither are
@@ -527,8 +546,7 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 	 */
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder("{ ");
-		builder.append('[');
+		StringBuilder builder = new StringBuilder("{ [");
 		builder.append(getId());
 		builder.append("] ");
 		builder.append('(');
