@@ -43,7 +43,10 @@ public class Arena {
 	 * @param tickRate
 	 * 		a fraction of a second.
 	 */
-	public void setDeltaTime(double tickRate) { mUnitTime = tickRate; }
+	public void setDeltaTime(double tickRate) {
+		mUnitTime = tickRate;
+		Phys.syncTimescale(mUnitTime);
+	}
 
 	/**
 	 * [INCOMPLETE] Calculates the level's current game state. This includes instance locations, health
@@ -120,21 +123,21 @@ public class Arena {
 				
 				// Test collision with all Actor and disable projectile
 				boolean collides = false;
-//				for (Actor a : mActList) {
-//					
-//					if (a != Main.getFloor() && (collides = p.collidesWith(a))) {
-//						System.out.printf("Projectile[%d] collision with [%d]! Disabling Projectile %s\n", p.getId(), a.getId(), p);
-//						p.disable();
-//						break;
-//					}
-//				}
+				for (Actor a : mActList) {
+					
+					if (a != Main.getFloor() && (collides = p.collidesWith(a))) {
+						System.out.printf("Projectile[%d] collision with [%d]! Disabling Projectile %s\n", p.getId(), a.getId(), p);
+						p.disable();
+						break;
+					}
+				}
 				
 				// Move again only if no collision
 				if (!collides) {
 					Vector2D velo = p.getPhysics().getVelocity();
 					Vector2D direction = velo.getUnitVector();
 					//direction.multiply(p.getSpeed());
-					p.moveImpulse(direction);
+					p.move();
 					//p.moveBy(1, 1);
 				}
 			}
@@ -148,10 +151,7 @@ public class Arena {
 	 * @param e	the Entity to affect.
 	 */
 	private void applyGravity(Entity e) {
-		Vector2D force = new Vector2D(mGrav);
-		// Scale force by time
-		force.multiply(mUnitTime);
-		e.moveImpulse(force);
+		e.moveBy(0, -2);
 	}
 
 	/**
