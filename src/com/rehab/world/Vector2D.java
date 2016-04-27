@@ -206,6 +206,24 @@ public class Vector2D {
 	}
 	
 	/**
+	 * Adds an amount along the hypotenuse (magnitude) of the right triangle formed
+	 * by the Vector2D's head coordinates.
+	 *
+	 * @param len	amount to add to magnitude.
+	 * @see #add(double, double)
+	 * @see #add(Vector2D)
+	 */
+	public void add(double len) {
+		// No need to calc if nothing to add
+		if (len == 0) {
+			return;
+		}
+		// Change magnitude to new length
+		double newMagnitude = this.magnitude() + len;
+		this.changeMagnitude(newMagnitude);
+	}
+	
+	/**
 	 * Multiplies the Vector2D's coordinates by a specified scalar. The Vector2D's base point
 	 * is unaffected and so only the head point will scale. For multiplication with another
 	 * Vector2D, see {@link #dotProduct(Vector2D)}.
@@ -438,13 +456,15 @@ public class Vector2D {
 		return builder.toString();
 	}
 
+
+
 	/**
 	 * Point is a wrapper for a pair of coordinates: x and y.
 	 */
 	public static class Point {
 		// Coordinates
-		private double x;
-		private double y;
+		private double x = 0;
+		private double y = 0;
 		
 		/**
 		 * Basic constructor for a Point.
