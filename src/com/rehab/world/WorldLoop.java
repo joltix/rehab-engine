@@ -121,7 +121,6 @@ public class WorldLoop extends Thread {
 					frame.push(p);
 				}
 			}
-			frame.lock();
 			ProtoRender.getInstance().requestDraw(frame);
 			
 			
