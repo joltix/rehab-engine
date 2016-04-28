@@ -29,28 +29,6 @@ public class Projectile extends Entity {
 		mOwner = p.mOwner;
 		mDamage = p.mDamage;
 	}
-	
-	
-
-	@Override
-	public void moveBy(double shiftX, double shiftY) {
-		super.moveBy(shiftX, shiftY);
-		double newX = getX();
-		double newY = getY();
-		
-		Phys p = getPhysics();
-		double oldX = p.getLastX();
-		double oldY = p.getLastY();
-		
-		if (newX < oldX) {
-			throw new IllegalStateException("WENT BACKWARDS ON X " + this);
-		}
-		if (newY < oldY) {
-			throw new IllegalStateException("WENT BACKWARDS ON Y " + this);
-		}
-	}
-
-
 
 	/**
 	 * Sets the damage of the Projectile.
