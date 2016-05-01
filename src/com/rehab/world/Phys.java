@@ -238,8 +238,9 @@ public class Phys {
     /**
      * Sets the speed to be used during move calls. If the current speed is 0, then
      * this method does nothing since direction is not taken into account and so no
-     * state is saved. If {@link #isMoving()} returns false, then calling this function
-     * will have no effect. To set a path and travel speed, see {@link #setVelocity(double, double, double)}.
+     * state is saved. If {@link #isMoving()} returns false or the new speed is the
+     * same as the currently set speed, then calling this function will have no
+     * effect. To set a path and travel speed, see {@link #setVelocity(double, double, double)}.
 	 * This method should be used to alter speed and not initialize it.
      *
      * @param speed	the speed in feet per second.
@@ -248,8 +249,8 @@ public class Phys {
     public void setSpeed(double speed) {
     	if (speed < 0) {
     		throw new IllegalArgumentException("Speed must not be negative");
-    	} else if (!isMoving()) {
-    		// Bail out if no speed (and thus no direction)
+    	} else if (!isMoving() || mSpeed == speed) {
+    		// Bail out if no speed (and thus no direction) or no change in speed
     		return;
     	}
     	// Save velocity as past
@@ -286,20 +287,19 @@ public class Phys {
 	}
 
 	/**
-	 * Sets the direction and speed of the Projectile. The x and y-coordinates
-	 * specified will not imply a certain magnitude based off of the current
-	 * location and the new direction. The speed parameter determines the
-	 * magnitude of the direction. This method will save the Phys' previous
-	 * state.
+	 * Sets the direction and speed of the Projectile. The specified x and y-coordinates
+	 * determine the direction of motion relative to wherever the Entity is while the speed
+	 * parameter determines the magnitude of the direction vector. This method will save
+	 * the Phys' previous state.
 	 *
 	 * @param x	the target location's x-coordinate.
 	 * @param y	the target location's y-coordinate.
 	 * @param speed	magnitude of vector.
-	 * @throws IllegalArgumentException	if speed < 0
+	 * @throws IllegalArgumentException	if speed <= 0
 	 */
 	public void setVelocity(double x, double y, double speed) {
-    	if (speed < 0) {
-    		throw new IllegalArgumentException("Speed must not be negative");
+    	if (speed <= 0) {
+    		throw new IllegalArgumentException("Speed must be > 0");
     	}
     	saveState();
     	
@@ -312,7 +312,7 @@ public class Phys {
     	mSpeed = speed;
     	mVelocity.changeMagnitude(speed);
     }
-
+	
     /**
      * Gets the acceleration used during move calls.
      *
@@ -345,9 +345,7 @@ public class Phys {
 	 * 		true if the instance is under the influence of gravity, false
 	 *		otherwise.
 	 */
-    public boolean isGravityEnabled() {
-    	return mEnableGravity;
-    }
+    public boolean isGravityEnabled() { return mEnableGravity; }
 
 	/**
 	 * Sets whether or not the Entity should be pulled to the source of gravity.
