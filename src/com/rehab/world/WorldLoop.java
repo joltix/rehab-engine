@@ -91,12 +91,12 @@ public class WorldLoop extends Thread {
 			mLastTickDuration = System.nanoTime() - mLastTickStart;
 			mLastTickStart = System.nanoTime();
 			
-			// Run physics for 1 unit
-			while (mLastTickDuration > mTickInterval) {
+			// Run physics for at least 1 unit (+ more based on previous frame duration)
+			do {
 				mLvl.stepActors();
 				mLvl.stepProjectiles();
 				mLastTickDuration -= mTickInterval;
-			}
+			} while (mLastTickDuration > mTickInterval);
 			
 			// Send draw requests to update screen
 			InstanceManager manager = InstanceManager.getInstance();
