@@ -32,9 +32,7 @@ public class Actor extends Entity implements Combatant {
 	}
 
 	public void arm(double projSpd, double projDmg, Projectile reference) {
-		
-		Projectile proj = InstanceManager.getInstance().createProjectile(reference);
-		mWeapon = new Weapon(this, projSpd, projDmg, proj);
+		mWeapon = new Weapon(this, projSpd, projDmg, reference);
 	}
 	
 	/**
