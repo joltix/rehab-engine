@@ -4,24 +4,47 @@ import com.rehab.animation.Sprite;
 
 /**
  * <p>
- * Props are game objects that do not directly have an effect on the game. These
- * game objects always have Sprites, infinite health, no collision, and are not
- * affected by gravity. Methods such as {@link #setHealth(double)} which change the aforementioned values therefore
- * have no effect on a Prop.
+ * Props are game objects that are not meant to threaten the player. These
+ * game objects always have {@link Sprite}s, infinite health, and are not
+ * affected by gravity. Methods such as {@link #setHealth(double)} which change
+ * the aforementioned values therefore have no effect on a Prop.
+ * </p>
  * 
- * Since Props are still Entities, Props retain the primary movement methods
- * {@link #moveBy(double, double)}, {@link #moveTo(double, double)}, and
- * {@link #moveImpulse(com.rehab.world.Phys.Vector)} and so may be given motion
- * or relocated.
+ * <p>
+ * Since Props are still {@link Entity} objects, Props retain the primary movement
+ * methods {@link #moveBy(double, double)}, {@link #moveTo(double, double)}, and
+ * {@link #move()} and so may be given motion or relocated.
  * </p>
  *
  */
 public class Prop extends Entity {
 
+	/**
+	 * Basic constructor for a non-collidable Prop.
+	 * 
+	 * @param sprite	Sprite to represent on-screen.
+	 */
 	public Prop(Sprite sprite) {
+		this(sprite, 0, 0);
+	}
+	
+	/**
+	 * Constructor for a Prop with a Hitbox collision model. Passing in 0 for
+	 * the collision width or height will produce a non-collidable Prop.
+	 * 
+	 * @param sprite	Sprite visually representing the Prop.
+	 * @param collisionW	width of the collision model.
+	 * @param collisionH	height of the collision model.
+	 */
+	public Prop(Sprite sprite, double collisionW, double collisionH) {
 		super(1, -1);
 		super.setEnableGravity(false);
 		super.setSprite(sprite);
+		
+		// Create a collision model if valid collision dimensions
+		if (collisionW > 0 && collisionH > 0) {
+			this.setCollisionModel(new Hitbox(0, 0, collisionW, collisionH));
+		}
 	}
 	
 	@Override
@@ -29,29 +52,12 @@ public class Prop extends Entity {
 		// TODO Auto-generated method stub
 		
 	}
-
-	/**
-	 * Props do not have collision and so this method will always return false.
-	 */
-	@Override
-	public boolean collidesWith(Entity e) {
-		return false;
-	}
-
 	
 	/**
 	 * Props cannot die and so this method will have no effect.
 	 */
 	@Override
 	protected void setMaximumHealth(double maxHealth) {
-		return;
-	}
-
-	/**
-	 * Props have no collision and so this method will have no effect.
-	 */
-	@Override
-	protected void setCollisionModel(Hitbox h) {
 		return;
 	}
 
