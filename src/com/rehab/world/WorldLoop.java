@@ -64,7 +64,7 @@ public class WorldLoop extends Thread {
 	 */
 	private WorldLoop(int tickRate, Arena arena) {
 		mLvl = arena;
-		mLvl.setDeltaTime(1d / tickRate);
+		mLvl.setTimescale(1d / tickRate);
 		// Measure time needed
 		mTarTick = tickRate;
 		mTickInterval = 1000000000 / mTarTick;
