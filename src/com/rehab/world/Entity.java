@@ -90,13 +90,10 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 	/**
 	 * Moves the Entity using the current values set in its Phys.
 	 * 
-	 * @throws IllegalStateException	if the Entity is set as immobile.
 	 * @see #moveBy(double, double)
 	 * @see #moveTo(double, double)
 	 */
-	public void move() {
-		ensureMobility();
-		
+	public void move() {		
 		mPhys.move();
 		syncModels();
 	}
@@ -109,13 +106,10 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 	 * 
 	 * @param x	the x value to shift by.
 	 * @param y	the y value to shift by.
-	 * @throws IllegalStateException	if the Entity is set as immobile.
 	 * @see #moveImpulse(Vector)
 	 * @see #moveTo(double, double)
 	 */
-	public void moveBy(double x, double y) {
-		ensureMobility();
-		
+	public void moveBy(double x, double y) {		
 		mPhys.moveBy(x, y);
 		syncModels();
 	}
@@ -125,28 +119,22 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 	 * 
 	 * @param x	the new x coordinate.
 	 * @param y	the new y coordinate.
-	 * @throws IllegalStateException	if the Entity is set
-	 * as immobile.
 	 * @see #moveBy(double, double)
 	 * @see #moveImpulse(Vector)
 	 */
-	public void moveTo(double x, double y) {
-		ensureMobility();
-		
+	public void moveTo(double x, double y) {		
 		mPhys.moveTo(x, y);
 		syncModels();
 	}
 	
 	/**
-	 * Throws an Exception if the Entity should not be movable.
+	 * Checks whether or not the Entity is moving.
 	 * 
-	 * @throws IllegalStateException	if the Entity is set
-	 * as immobile.
+	 * @return true if the Entity's speed == 0, false otherwise.
+	 * @see #getSpeed()
 	 */
-	private void ensureMobility() {
-		if (!mMovable) {
-			throw new IllegalStateException("Entity is set as immobile");
-		}
+	public boolean isMoving() {
+		return mPhys.getSpeed() == 0;
 	}
 	
 	/**
@@ -521,23 +509,66 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 	public void setOnCollisionListener(OnCollisionListener listener) {
 		mOnCollisionListener = listener;
 	}
-
-	@Override
-	public void onMove(double oldX, double oldY, double newX, double newY) {
-		// TODO Auto-generated method stub
-		
-	}
-
+	
 	@Override
 	public int getZ() {
-		// TODO Auto-generated method stub
 		return LayerManager.LAYER_FREE_1;
 	}
 
+	/**
+	 * This method will throw a CloneNotSupportedException. In order to clone an
+	 * Entity, use the constructor {@link #Entity(Entity)} instead.
+	 */
 	@Override
-	public void onClick() {
-		// TODO Auto-generated method stub
+	protected Object clone() throws CloneNotSupportedException {
+		throw new CloneNotSupportedException("Use a constructor instead to clone");
+	}
+
+	/**
+	 * Compares if two Entities are the same. Two Entities with the same properties such
+	 * as Hitbox, health, or location, are not considered the same unless both have the
+	 * same id assigned by the Register they are put in.
+	 * 
+	 * @param obj	the Object to compare the calling instance with.
+	 * @throws IllegalStateException	if either the calling Entity's id == {@link Register#UNREGISTERED}
+	 * or the other Entity's id == {@link Register#UNREGISTERED}.
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Entity)) {
+			return false;
+		}
 		
+		Entity ent = (Entity) obj;
+		int id = this.getId();
+		int otherId = ent.getId();
+		
+		// Validate caller's id
+		if (id == Register.UNREGISTERED) {
+			throw new IllegalStateException("Calling Entity may not be compared since id has not been assigned (0)");
+		}
+
+		// Validate other Entity's id
+		if (otherId == Register.UNREGISTERED) {
+			throw new IllegalStateException("Calling Entity may not be compared since id has not been assigned (0)");
+		}
+		
+		// Matched
+		if (otherId == id) {
+			return true;
+		}
+		
+		// Both Entities but ids don't match
+		return false;
+	}
+
+	/**
+	 * Returns the Identifiable id assigned when placed into a Register. If the Entity has
+	 * not yet been assigned to a Register, this method returns 0.
+	 */
+	@Override
+	public int hashCode() {
+		return this.getId();
 	}
 
 	/**
@@ -556,7 +587,5 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 		builder.append(") }");
 		return builder.toString();
 	}
-	
-	
 
 }
