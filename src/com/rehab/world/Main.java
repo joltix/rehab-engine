@@ -17,15 +17,10 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 	
-	private static Actor mFloor;
 	private static Actor mDummy;
 
 	public static void main(String[] args) {
 		Application.launch(args);
-	}
-
-	public static Actor getFloor() {
-		return mFloor;
 	}
 	
 	public static Actor getDummy() {
@@ -40,8 +35,8 @@ public class Main extends Application {
 		// The test components
 		Actor player = initPlayer();
 		Actor dummy = initDummy();
-		mFloor = initFloor();
-		Arena lvl = initLevel(player);
+		Prop floor = initFloor();
+		Arena lvl = initLevel(floor, player);
 
 		// Setup keyboard control
 		Movement move = new Movement(canvas, player);
@@ -91,50 +86,43 @@ public class Main extends Application {
 
 	/**
 	 * Sets up the test Arena.
-	 * @param player
-	 * 		the Actor representing the player.
-	 * @return
-	 * 		the Arena.
+	 * 
+	 * @param floor	the level's floor to fight on.
+	 * @param player	the Actor representing the player.
+	 * @return	the Arena.
 	 */
-	private Arena initLevel(Actor player) {
-		Arena arena = new Arena("BASIC-TEST", 720, 480);
+	private Arena initLevel(Prop floor, Actor player) {
+		Arena arena = new Arena("BASIC-TEST", 720, 480, floor);
 		arena.setPlayer(player);
 
 		InstanceManager instaMan = InstanceManager.getInstance();
-		arena.setEntities(instaMan.getLoadedActors(), instaMan.getLoadedProjectiles());
+		arena.setEntities(instaMan.getLoadedActors(), instaMan.getLoadedProjectiles(), instaMan.getLoadedProps());
 		return arena;
 	}
 
 	/**
 	 * Sets up the floor object at the bottom of the screen.
-	 * @return
-	 * 		the floor object.
+	 * 
+	 * @return the floor object.
 	 */
-	private Actor initFloor() {
+	private Prop initFloor() {
 		// (Foregoing Obstacle for reval)
 		// Initialize a non moving floor
 		InstanceManager instMan = InstanceManager.getInstance();
-		Actor a = instMan.createActor(400, 100);
-		a.setEnableGravity(false);
+		Prop p = instMan.createProp(new Sprite("bar.png"), 400, 32);
 
-		// Setup collision
-		Hitbox h = new Hitbox(0, 0, 720, 32);
-		a.setCollisionModel(h);
-
-		// Load image and move to proper position
-		a.moveTo(0, 32);
-		a.setSprite(new Sprite("bar.png"));
+		//Move to proper position at bottom
+		p.moveTo(0, 32);
 
 		// Add to game world
-		instMan.load(a);
-
-		return a;
+		instMan.load(p);
+		return p;
 	}
 
 	/**
 	 * Sets up the player object high at the top of the screen.
-	 * @return
-	 * 		the player obj.
+	 * 
+	 * @return the player obj.
 	 */
 	private Actor initPlayer() {
 		// Initialize and setup the falling obj
@@ -158,6 +146,11 @@ public class Main extends Application {
 		return a;
 	}
 
+	/**
+	 * Sets up the dummy object high at the top of the screen.
+	 * 
+	 * @return the dummy obj.
+	 */
 	private Actor initDummy() {
 		InstanceManager instaMan = InstanceManager.getInstance();
 		mDummy = instaMan.createActor(62, 100);
