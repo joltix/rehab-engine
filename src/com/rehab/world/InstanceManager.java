@@ -128,7 +128,7 @@ public class InstanceManager extends Register {
 	}
 	
 	/**
-	 * Creates a new {@link Prop} instance with a given {@link Sprite} for visuals.
+	 * Creates a new non-collidable {@link Prop} instance with a given {@link Sprite}.
 	 * The returned Prop is already registered with the {@link InstanceManager}.
 	 * If {@link RenderLoop#start()} has been called, the Prop will be
 	 * automatically loaded into the game and a draw request will be sent.
@@ -138,6 +138,23 @@ public class InstanceManager extends Register {
 	 */
 	public Prop createProp(Sprite sprite) {
 		Prop p = new Prop(sprite);
+		register(p);
+		return p;
+	}
+	
+	/**
+	 * Creates a new collidable {@link Prop} instance with a given {@link Sprite}.
+	 * The returned Prop is already registered with the {@link InstanceManager}.
+	 * If {@link RenderLoop#start()} has been called, the Prop will be
+	 * automatically loaded into the game and a draw request will be sent.
+	 * 
+	 * @param sprite	the Sprite.
+	 * @param collisionW	width of the Hitbox.
+	 * @param collisionH	height of the Hitbox.
+	 * @return	the Prop.
+	 */
+	public Prop createProp(Sprite sprite, double collisionW, double collisionH) {
+		Prop p = new Prop(sprite, collisionW, collisionH);
 		register(p);
 		return p;
 	}
