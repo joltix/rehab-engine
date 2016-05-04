@@ -20,4 +20,8 @@ public interface Drawable {
 	
 	boolean isVisible();
 	
+	float getRotation();
+	
+	void setRotation(float f); 
+	
 }
