@@ -7,45 +7,87 @@ import javafx.scene.image.Image;
 public class AnimationDatabase {
 
 	// assoc a reels with a name[animation]
-	private Hashtable<String, CircularArray<Image>> reelsNameAssoc;
-	// assoc an entity with a certain animation,
-	//private Hashtable<Integer, String> entAnimation;
+	private Hashtable<String, CircularArray<Texture>> mReelsNameAssoc;
+	//assoc the entity id with the animation name
+	private Hashtable<Integer, String> mCurrentAnimation; 
+	//assoc the entity id with the image index
+	private Hashtable<Integer, Integer> mUpdateCurrAni; 
+	boolean isFirstPic = false;
+	
+	/**
+	 * Add the current animation into the hash table
+	 * 
+	 * @param id
+	 * @param aniName
+	 */
+	public void addCurrAni(Integer id, String aniName){
+
+		if(mCurrentAnimation.containsKey(id)){
+			//it contains then we assume that we want to remove it and update it
+			mCurrentAnimation.remove(id, aniName);
+			mCurrentAnimation.put(id,aniName);
+		}
+		else if (aniName == null){ // if its not animating 
+			mCurrentAnimation.put(id, null);
+
+		}
+		mCurrentAnimation.put(id,aniName); //default add 
+	}
+	/**
+	 * Get the string name of the animation
+	 * 
+	 * @param id
+	 * @return the String name
+	 */
+	public String getAni(Integer id){	return mCurrentAnimation.get(id);	}
+		
+	
+	/**
+	 * Get the array of texture 
+	 * 
+	 * @param name
+	 * @return an array of texture(s) 
+	 */
+	public CircularArray<Texture> getTexArr(String name){		return mReelsNameAssoc.get(name);		}
+	
 
 	/**
-	 * Method to add an entity object with its associated animation in the
-	 * Hashtable
+	 * To retrieve the current image index that is currently animating and then 
+	 * updating the current to the next image
 	 * 
-	 * @param i
-	 * @param animation
-	 * @return true if added successfully into the Hashtable false otherwise
+	 * @param id
 	 */
-//	public boolean addEnt(int i, String animation) {
-//		if (entAnimation.containsKey(i)) {
-//			return false;
-//		} else {
-//			entAnimation.put(i, animation);
-//			return true;
-//		}
-//
-//	}
+	public 	void changeCurrIndex(Integer id){
+		//gives the animation name give the entity id
+		String animation= mCurrentAnimation.get(id);
+		//gets  the actual array assoc with the name
+		CircularArray<Texture> arr = mReelsNameAssoc.get(animation);
+		
 
-	/**
-	 * Method that allows to go into the entAnimation Hashtable and change the
-	 * animation value that is associated with that entity
-	 * 
-	 * @param i
-	 * @param newAnimation
-	 * @return true if it was successfully added into the Hashtable entAnimation
-	 *         false otherwise
-	 */
-//	public boolean changeAnimation(int i, String newAnimation) {
-//		if (entAnimation.containsKey(i)) {
-//			entAnimation.replace(i, newAnimation);
-//			return true;
-//		} else {
-//			return false;
-//		}
-//	}
+		if(mUpdateCurrAni.containsKey(id)){				//checks if the key is in the hash table
+			
+			int imgIndex = mUpdateCurrAni.get(id);		// Retrieve the last draw's image index
+			
+			mUpdateCurrAni.remove(id);							//remove it 
+			
+			if(imgIndex < arr.size()-1){						//check if the current index is still within bound
+				
+				imgIndex++;       							 //increment the index
+				
+				mUpdateCurrAni.put(id, imgIndex); 	//  put next index in
+			}else {
+				
+				imgIndex=0;  					 //when we are at the last index wrap back to the beginning
+			}
+
+		}else {
+			
+			mUpdateCurrAni.put(id,0);			//else is it not in the table we add with the index being 0
+
+		}
+
+
+	}
 
 	/**
 	 * Method that will add the reels, of images, or animation into
@@ -55,15 +97,13 @@ public class AnimationDatabase {
 	 * @param i
 	 * @return true if successfully added into the Hashtable false otherwise
 	 */
-	public boolean addAni(String id, CircularArray<Image> i) {
-		if (reelsNameAssoc.containsKey(id)) {
+	public boolean addAni(String id, CircularArray<Texture> i) {
+		if (mReelsNameAssoc.containsKey(id)) {
 			return false;
 		} else {
-			reelsNameAssoc.put(id, i); // add a animation
+			mReelsNameAssoc.put(id, i); 	// add a animation
 			return true;}
-			// each individual sprite will store an instance of the anmation
-			// class
-			// have each own database
+
 	}
 
 	/**
@@ -75,13 +115,13 @@ public class AnimationDatabase {
 	 * @return
 	 * the image
 	 */
-	public Image getImage(String entityAniName, int frameID) {
-
-	
-		CircularArray<Image> frame = reelsNameAssoc.get(entityAniName);//return the reels
-
-		Image i = frame.get(frameID);//return the frame
-		return i; 
-	}
+//	public Image getImage(String entityAniName, int frameID) {
+//
+//		CircularArray<Texture> frame = mReelsNameAssoc.get(entityAniName);	//return the reels
+//
+//		Image i = frame.get(frameID);		//return the frame
+//			
+//		return i; 
+//	}
 
 }
