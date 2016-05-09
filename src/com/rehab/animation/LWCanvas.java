@@ -1,13 +1,13 @@
 package com.rehab.animation;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.system.MemoryUtil;
 
+import com.rehab.user.KeyMap;
+import com.rehab.user.MouseMap;
 import com.rehab.world.Frame.Renderable;
-import com.rehab.world.InstanceManager;
 import com.rehab.world.LayerManager;
 import com.rehab.world.LoopLogger;
 import com.rehab.world.WorldLoop;
@@ -30,6 +30,10 @@ public class LWCanvas {
 	private static LWCanvas mInstance = null;
 	// Framerate logging
 	private LoopLogger mFrameLog = new LoopLogger(LWCanvas.class.getCanonicalName(), 2);
+	
+	private KeyMap mKeyMapping;
+	private MouseMap mMouseMapping;
+	
 	// Render for layering objects to draw
 	private Renderer mRender = Renderer.getInstance();
 	
@@ -45,16 +49,6 @@ public class LWCanvas {
 	
 	// Loop control
 	private boolean mRun = true;
-	
-	private GLFWKeyCallback mKeyInput = new GLFWKeyCallback(){
-
-		@Override
-		public void invoke(long window, int key, int scancode, int action, int mods) {
-			// Escape key means user wanted to exit
-			if (key == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_RELEASE) {
-				mRun = false;
-			}
-		}};
 	 
 	/**
 	 * Constructor for a basic Canvas of given dimensions.
@@ -109,7 +103,7 @@ public class LWCanvas {
 	 *
 	 * @return	the instance.
 	 */
-	public LWCanvas getInstance() {
+	public static LWCanvas getInstance() {
 		synchronized (mInstance) {
 			return mInstance;
 		}
@@ -144,9 +138,6 @@ public class LWCanvas {
 			throw new IllegalStateException("Failed to initialize window");
 		}
 		
-		// Hook key input
-		GLFW.glfwSetKeyCallback(id, mKeyInput);
-		
 		return id;
 		
 	}
@@ -165,6 +156,29 @@ public class LWCanvas {
 	 * Makes the Canvas visible on-screen.
 	 */
 	public void show() {
+		
+		// Set a basic default KeyMap to allow ESC to close window
+		if (mKeyMapping == null) {
+			mKeyMapping = new KeyMap(){
+
+				@Override
+				public void onEnter(boolean release) {
+					
+				}
+
+				@Override
+				public void onSpace(boolean release) {
+					
+				}
+
+				@Override
+				public void onKey(int key, boolean release) {
+					
+				}};
+				// Install keyboard callback
+				GLFW.glfwSetKeyCallback(mWinId, mKeyMapping);
+		}
+		
 		GLFW.glfwMakeContextCurrent(mWinId);
 		GLFW.glfwSwapInterval(1);
 		GLFW.glfwShowWindow(mWinId);
@@ -195,7 +209,44 @@ public class LWCanvas {
 	 * @return Canvas' height.
 	 */
 	public int getHeight() { return mHeight; }
+	
+	/**
+	 * Sets the KeyMap to use for keyboard input. A KeyMap may not be
+	 * removed without a replacement. As such, passing null
+	 * will throw an IllegalArgumentException.
+	 * 
+	 * @param map	the KeyMap.
+	 * @throws IllegalArgumentException	if the given KeyMap
+	 * is null.
+	 */
+	public void setKeyMap(KeyMap map) {
+		// May not remove any previous KeyMap without replacement
+		if (map == null) {
+			throw new IllegalArgumentException("May not set null KeyMap");
+		}
+		mKeyMapping = map;
 		
+		// Bind keyboard callbacks
+		GLFW.glfwSetKeyCallback(mWinId, map);
+	}
+	
+	/**
+	 * Sets the MouseMap to use for mouse input.
+	 * 
+	 * @param map	the MouseMap.
+	 */
+	public void setMouseMap(MouseMap map) {
+		// May not remove any previous MouseMap without replacement
+		if (map == null) {
+			throw new IllegalArgumentException("May not set null MouseMap");
+		}
+		mMouseMapping = map;
+		
+		// Bind button and position callbacks
+		GLFW.glfwSetMouseButtonCallback(mWinId, map);
+		GLFW.glfwSetCursorPosCallback(mWinId, map.getLocationCallback());
+	}
+	
 	/**
 	 * Gets the current width and height of the desktop.
 	 */
@@ -261,7 +312,9 @@ public class LWCanvas {
 		
 		// Clean up window and stop the game world
 		GLFW.glfwDestroyWindow(mWinId);
-		WorldLoop.getInstance().halt();
+		if (WorldLoop.isInitialized()) {
+			WorldLoop.getInstance().halt();
+		}
 	}
 	
 	/**
