@@ -26,6 +26,21 @@ public class WorldLoop extends Thread {
 	
 		
 	/**
+	 * Constructor for the World's state loop.
+	 * @param tickRate
+	 * 		the desired ticks per second.
+	 * @param arena
+	 * 		the level to simulate.
+	 */
+	private WorldLoop(int tickRate, Arena arena) {
+		mLvl = arena;
+		mLvl.setTimescale(1d / tickRate);
+		// Measure time needed
+		mTarTick = tickRate;
+		mTickInterval = 1000000000 / mTarTick;
+	}
+
+	/**
 	 * Gets an instance of the WorldLoop. This method should only be used if getInstance(int, Arena)
 	 * was ever called at least once. Calling this method first will throw an IllegalStateException.
 	 * @throws IllegalStateException
@@ -53,21 +68,6 @@ public class WorldLoop extends Thread {
 	}
 	
 	/**
-	 * Constructor for the World's state loop.
-	 * @param tickRate
-	 * 		the desired ticks per second.
-	 * @param arena
-	 * 		the level to simulate.
-	 */
-	private WorldLoop(int tickRate, Arena arena) {
-		mLvl = arena;
-		mLvl.setTimescale(1d / tickRate);
-		// Measure time needed
-		mTarTick = tickRate;
-		mTickInterval = 1000000000 / mTarTick;
-	}
-	
-	/**
 	 * The set desired ticks per second.
 	 * @return
 	 * 		the number of ticks per second.
@@ -75,10 +75,16 @@ public class WorldLoop extends Thread {
 	public int getTickRate() { return mTarTick; }
 	
 	/**
-	 * Stops the WorldLoop from running.
+	 * Attempts to stop the WorldLoop from running. This method may
+	 * be safely called from any {@link Thread}.
 	 */
-	public void halt() {
-		mLoop = false;
+	public static void halt() {
+		synchronized (WorldLoop.class) {
+			if (mInstance == null) {
+				return;
+			}
+			mInstance.mLoop = false;
+		}
 	}
 	
 	@Override
