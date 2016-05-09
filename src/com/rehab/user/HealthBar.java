@@ -8,6 +8,7 @@ import com.rehab.world.OnHealthIncreaseListener;
 
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
 public class HealthBar implements Drawable, OnHealthDecreaseListener, OnHealthIncreaseListener {
@@ -71,12 +72,6 @@ public class HealthBar implements Drawable, OnHealthDecreaseListener, OnHealthIn
 	}
 
 	@Override
-	public void onClick() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void onHealthIncrease(double oldHealth, double newHealth) {
 		graphics.setFill(Color.DARKGREY);
 		graphics.fillRect(5, 5, mWidth, mHeight);
@@ -98,6 +93,42 @@ public class HealthBar implements Drawable, OnHealthDecreaseListener, OnHealthIn
 		graphics.setFill(Color.GREEN);
 		graphics.fillRect(5, 5, barWidth, mHeight);
 		
+	}
+
+	@Override
+	public void onMousePress(MouseEvent press) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onMouseRelease(MouseEvent release) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isVisible() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public float getRotation() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setRotation(float f) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isFacingLeft() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

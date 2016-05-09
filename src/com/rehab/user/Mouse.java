@@ -3,7 +3,6 @@ package com.rehab.user;
 
 import com.rehab.animation.Drawable;
 import com.rehab.world.Actor;
-import com.rehab.world.Entity;
 
 import javafx.event.EventHandler;
 import javafx.scene.canvas.Canvas;
@@ -30,24 +29,32 @@ public class Mouse {
 		coordinates = drawables;
 		mPlayer = player;
 		
-		canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+		canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
+
 			@Override
-			public void handle(MouseEvent click) {
-				double xMouse = click.getX(), yMouse = 480 - click.getY();
-				iterate(xMouse, yMouse);
+			public void handle(MouseEvent press) {
+				iterate(press, true);
+			}}  );
+		
+		canvas.setOnMouseReleased(new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent release) {
+				double xMouse = release.getX(), yMouse = 480 - release.getY();
+				iterate(release, false);
 				mPlayer.fireAt(xMouse, yMouse);
-			}
-		});
+			}} );
 	}
 
 	/**
 	 * A method to iterate through the linked list of Drawable objects and check
-	 * whether the object was cliked on.
+	 * whether the object was clicked on.
 	 * 
 	 * @param xMouse
 	 * @param yMouse
 	 */
-	public void iterate(double xMouse, double yMouse) {
+	public void iterate(MouseEvent click, boolean pressed) {
+		double xMouse = click.getX(), yMouse = 480 - click.getY();
 		
 		for (Drawable draw : coordinates) {
 			double x = draw.getX();
@@ -56,7 +63,11 @@ public class Mouse {
 			double height = draw.getHeight();
 			if (xMouse > x && xMouse < width + x) {
 				if (yMouse <= y && yMouse >= y - height) {
-					draw.onClick();
+					if(pressed){
+					draw.onMousePress(click);
+					} else {
+						draw.onMouseRelease(click);
+					}
 				}
 			}
 		}

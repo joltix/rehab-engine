@@ -9,6 +9,7 @@ import javafx.event.EventHandler;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.Stage;
 
 /*
  * 
@@ -27,7 +28,7 @@ public class Movement {
 	 * @param canvas
 	 * @param character
 	 */
-	public Movement(Canvas canvas, Actor character) {
+	public Movement(Canvas canvas, Actor character, Stage primaryStage) {
 		canvas.setFocusTraversable(true);
 		canvas.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
 			@Override
@@ -47,7 +48,7 @@ public class Movement {
 					SpawnManager.getInstance().immediateSpawn(dummy, new Point(128, 480));
 				}
 			}
-		});
+		});		
 
 	}
 }
