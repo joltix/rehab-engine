@@ -1,6 +1,8 @@
 package com.rehab.animation;
 
 
+import java.io.IOException;
+
 import com.rehab.user.MouseMap;
 import com.rehab.user.WASDKeyMap;
 import com.rehab.world.Actor;
@@ -20,13 +22,22 @@ public class LWMain {
 	
 	public static void main(String[] args) {
 
+		// Load all image files in "images" folder
+		try {
+			SpriteManager.loadFolder("images");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
 		Actor player = initPlayer();
 		Actor dummy = initDummy();
 		Prop floor = initFloor();
-		floor.setVisibility(false);
 		
 		Arena lvl = initLevel(floor, dummy);
 		
+		Sprite spr = SpriteManager.getInstance().getSprite("git_icon.jpg");
+		System.out.printf("Sprite: %s\n", spr);
 		
 		// Begin game world
 		WorldLoop world = WorldLoop.getInstance(60, lvl);
@@ -75,10 +86,9 @@ public class LWMain {
 	private static Prop initFloor() {
 		// Initialize a non moving floor
 		InstanceManager instMan = InstanceManager.getInstance();
-		Prop p = instMan.createProp(new Sprite("bar.jpg"), 400, 32);
 		
-		Sprite spr = p.getSprite();
-		System.out.printf("Floor w(%d) h(%d)\n", spr.getWidth(), spr.getHeight());
+		Prop p = instMan.createProp(400, 32, "bar.jpg");
+		
 		
 		//Move to proper position at bottom
 		p.moveTo(64, 32);
@@ -93,16 +103,14 @@ public class LWMain {
 	private static Actor initPlayer() {
 		// Initialize and setup the falling obj
 		InstanceManager instaMan = InstanceManager.getInstance();
-		Actor a = instaMan.createActor(62, 100);
+		Actor a = instaMan.createActor(62, 100, "git_icon.jpg");
 		
 		a.setCollisionModel(new Hitbox(0, 0, 32, 32));
 		a.setEnableGravity(true);
 		a.moveTo(0, 480);
-		a.setSprite(new Sprite("git_icon.jpg"));
 		
 		// Setup Projectile
-		Projectile proj = instaMan.createProjectile(a, new Hitbox(0, 0, 24));
-		proj.setSprite(new Sprite("git_icon.jpg"));
+		Projectile proj = instaMan.createProjectile(a, new Hitbox(0, 0, 24), "git_icon.jpg");
 		
 		// Setup weapon
 		a.arm(1, 5, proj);
@@ -117,10 +125,10 @@ public class LWMain {
 	 */
 	private static Actor initDummy() {
 		InstanceManager instaMan = InstanceManager.getInstance();
-		Actor dummy = instaMan.createActor(62, 100);
+		Actor dummy = instaMan.createActor(62, 100, "twitter_alpha.png");
 		dummy.setCollisionModel(new Hitbox(0, 0, 32, 32));
 		dummy.moveTo(360, 480);
-		dummy.setSprite(new Sprite("twitter_alpha.png"));
+		
 		dummy.setEnableGravity(true);
 
 		Actor clone = instaMan.createActor(dummy);
