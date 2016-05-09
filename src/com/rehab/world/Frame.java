@@ -67,10 +67,13 @@ public class Frame {
 	 * <p>
 	 * Represents a shallow copy of a Drawable game object to be drawn on the screen.
 	 * Renderables are stored within a Frame to be drawn soon after.
+	 * </p>
 	 */
 	public static class Renderable {
 		// Data for drawing
 		private Sprite sprite;
+		private boolean left;
+		private float rotation;
 		private double x, y;
 		private int z;
 		
@@ -82,6 +85,8 @@ public class Frame {
 		 */
 		public Renderable(Drawable drawable) {
 			sprite = drawable.getSprite();
+			left = drawable.isFacingLeft();
+			rotation = drawable.getRotation();
 			x = drawable.getX();
 			y = drawable.getY();
 			z = drawable.getZ();
@@ -93,6 +98,21 @@ public class Frame {
 		 * @return the Sprite to draw.
 		 */
 		public Sprite getSprite() { return sprite; }
+		
+		/**
+		 * Checks whether or not the Renderable's game object
+		 * is facing left.
+		 * 
+		 * @return true if the object is facing left, false otherwise.
+		 */
+		public boolean isFacingLeft() { return left; }
+		
+		/**
+		 * Gets the rotation value in degrees.
+		 * 
+		 * @return	the angle offset.
+		 */
+		public float getRotation() { return rotation; }
 		
 		/**
 		 * Gets the x value of the game object.
