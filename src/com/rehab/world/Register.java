@@ -74,6 +74,10 @@ public abstract class Register {
 		return mItems.remove(id);
 	}
 	
+	protected Iterable<Identifiable> items() {
+		return mItems.values();
+	}
+	
 	/**
 	 * Gets the number of Identifiables known to the Register.
 	 *
