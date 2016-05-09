@@ -1,5 +1,9 @@
 package com.rehab.world;
 
+import com.rehab.world.Vector2D.Point;
+
+import javafx.scene.input.MouseEvent;
+
 public class Actor extends Entity implements Combatant {
 
 	private OnDamageTakenListener mDamageTakenListener;
@@ -66,18 +70,24 @@ public class Actor extends Entity implements Combatant {
 	}
 
 	@Override
-	public void onClick() {
-		System.out.println("Clicked!");
-
-	}
-
-	@Override
 	public void fireAt(double x, double y) {
 		// Only armed can fight
 		if (!isArmed()) {
 			throw new IllegalStateException("Actor has not yet been weaponized");
 		}
 		mWeapon.fireAt(x, y);
+	}
+
+	@Override
+	public void onMousePress(MouseEvent event) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onMouseRelease(MouseEvent event) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }
