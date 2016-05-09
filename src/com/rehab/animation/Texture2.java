@@ -47,37 +47,17 @@ public class Texture2 {
 	public void rotate(float angle, float x, float y){
 		GL11.glRotatef(angle, x, y, 1);
 	}
-	private int loadTexture(String filename){
+	private void loadTexture(String filename){
 	
 		w = BufferUtils.createIntBuffer(1);
-	     h = BufferUtils.createIntBuffer(1);
+		h = BufferUtils.createIntBuffer(1);
 	    c = BufferUtils.createIntBuffer(1);
 	    
-	     image = STBImage.stbi_load_from_memory(imageBuffer, w, h, c, 0);
+	    image = STBImage.stbi_load_from_memory(imageBuffer, w, h, c, 0);
 	    //if can not open the file then throw an error
 	    if(image == null){
 	        throw new RuntimeException("Failed to load image: " + STBImage.stbi_failure_reason());
 	    }
-	    
-	    if(getComp() == 3){
-	    	//function specifies a two-dimensional texture image
-	        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, getWidth(), getHeight(), 0, GL11.GL_RGB, GL11.GL_UNSIGNED_BYTE, image);
-	    }
-	    else{
-	        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, getWidth(), getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, image);
-
-	        GL11.glEnable(GL11.GL_BLEND);//functions enable  OpenGL capabilities
-	        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-	    }
-	    //Sets texture parameters, needs a target and valued texture parameter
-	    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-	    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-	    //enable texture 2d
-	    GL11.glEnable(GL11.GL_TEXTURE_2D);
-	 
-	    
-	    // function generates texture names
-	    return GL11.glGenTextures();
 	}
 	
 	
@@ -95,8 +75,10 @@ public 	ByteBuffer getByteBuffer (){
  * @throws IOException
  */
 	private ByteBuffer readFile(String resource) throws IOException{
-	    File file = new File(resource);
+	    File file = new File(this.getClass().getResource(resource).getPath());
 
+	    System.out.printf("File name: %s\n", file.getName());
+	    
 	    FileInputStream fis = new FileInputStream(file);
 	    FileChannel fc = fis.getChannel();
 
