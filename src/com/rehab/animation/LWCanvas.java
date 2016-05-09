@@ -312,9 +312,7 @@ public class LWCanvas {
 		
 		// Clean up window and stop the game world
 		GLFW.glfwDestroyWindow(mWinId);
-		if (WorldLoop.isInitialized()) {
-			WorldLoop.getInstance().halt();
-		}
+		WorldLoop.halt();
 	}
 	
 	/**
