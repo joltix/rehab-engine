@@ -3,6 +3,7 @@ package com.rehab.world;
 import com.rehab.animation.Drawable;
 import com.rehab.animation.Sprite;
 import com.rehab.world.Register.Identifiable;
+import com.rehab.world.Vector2D.Point;
 
 /**
  * <p>
@@ -36,6 +37,9 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 	private Phys mPhys;
 	private Hitbox mCollision;
 	private Sprite mSprite;
+	
+	// Angle offset to tilt Sprite
+	private float mRotation;
 
 	// Stats
 	private int mOwner;
@@ -235,7 +239,7 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 	 * @param h	the Hitbox representing the Entity's collision.
 	 * @see #collidesWith(Entity)
 	 */
-	protected void setCollisionModel(Hitbox h) { mCollision = h; }
+	public void setCollisionModel(Hitbox h) { mCollision = h; }
 
 	/**
 	 * Sets the maximum boundary at which health is considered 100% or "full". If the
@@ -365,6 +369,14 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 		} else {
 			return mCollision.getHeight();
 		}
+	}
+	
+	public void setRotation(float angle) {
+		mRotation = angle;
+	}
+	
+	public float getRotation() {
+		return mRotation;
 	}
 
 	/**
@@ -514,6 +526,23 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 	public int getZ() {
 		return LayerManager.LAYER_FREE_1;
 	}
+	
+	@Override
+	public boolean isFacingLeft() {
+		
+		// Get the current direction
+		Vector2D velo = mPhys.getVelocity();
+		Point head = velo.getPoint();
+		Point base = velo.getBasePoint();
+		
+		// Figure direction
+		if (head.getX() >= base.getX()) {
+			return false;
+		} else {
+			return true;
+		}
+		
+	}
 
 	/**
 	 * This method will throw a CloneNotSupportedException. In order to clone an
@@ -533,7 +562,7 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 	 * @throws IllegalStateException	if either the calling Entity's id == {@link Register#UNREGISTERED}
 	 * or the other Entity's id == {@link Register#UNREGISTERED}.
 	 */
-	@Override
+/*	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof Entity)) {
 			return false;
@@ -562,14 +591,14 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 		return false;
 	}
 
-	/**
+	*//**
 	 * Returns the Identifiable id assigned when placed into a Register. If the Entity has
 	 * not yet been assigned to a Register, this method returns 0.
-	 */
+	 *//*
 	@Override
 	public int hashCode() {
 		return this.getId();
-	}
+	}*/
 
 	/**
 	 * Returns a String representing the Entity in the format
