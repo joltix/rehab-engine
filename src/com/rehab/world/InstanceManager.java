@@ -3,6 +3,7 @@ import java.util.Hashtable;
 
 import com.rehab.animation.Renderer;
 import com.rehab.animation.Sprite;
+import com.rehab.animation.SpriteManager;
 
 /**
  * <p>
@@ -75,10 +76,14 @@ public class InstanceManager extends Register {
 	 * 
 	 * @param mass	the mass in kilograms.
 	 * @param healthCap	the max health capacity.
+	 * @param imageName	the name of the image's file (with type).
 	 * @return	the Actor.
 	 */
-	public Actor createActor(double mass, double healthCap) {
+	public Actor createActor(double mass, double healthCap, String imageName) {
+		Sprite spr = SpriteManager.getInstance().getSprite(imageName);
+
 		Actor a = new Actor(mass, healthCap);
+		a.setSprite(spr);
 		register(a);
 		return a;
 	}
@@ -106,10 +111,14 @@ public class InstanceManager extends Register {
 	 * 
 	 * @param owner	the Actor who owns the Projectile.
 	 * @param collision	the Hitbox for the Projectile.
+	 * @param imageName	the name of the image's file (with type).
 	 * @return	the Projectile.
 	 */
-	public Projectile createProjectile(Actor owner, Hitbox collision) {
+	public Projectile createProjectile(Actor owner, Hitbox collision, String imageName) {
+		Sprite spr = SpriteManager.getInstance().getSprite(imageName);
+
 		Projectile p = new Projectile(owner, collision);
+		p.setSprite(spr);
 		register(p);
 		return p;
 	}
@@ -123,6 +132,7 @@ public class InstanceManager extends Register {
 	 * @return the Projectile's clone.
 	 */
 	public Projectile createProjectile(Projectile projectile) {
+		
 		Projectile p = new Projectile(projectile);
 		register(p);
 		return p;
@@ -134,11 +144,12 @@ public class InstanceManager extends Register {
 	 * If {@link RenderLoop#start()} has been called, the Prop will be
 	 * automatically loaded into the game and a draw request will be sent.
 	 * 
-	 * @param sprite	the Sprite.
+	 * @param imageName	the name of the image's file (with type).
 	 * @return	the Prop.
 	 */
-	public Prop createProp(Sprite sprite) {
-		Prop p = new Prop(sprite);
+	public Prop createProp(String imageName) {
+		Sprite spr = SpriteManager.getInstance().getSprite(imageName);
+		Prop p = new Prop(spr);
 		register(p);
 		return p;
 	}
@@ -149,13 +160,16 @@ public class InstanceManager extends Register {
 	 * If {@link RenderLoop#start()} has been called, the Prop will be
 	 * automatically loaded into the game and a draw request will be sent.
 	 * 
-	 * @param sprite	the Sprite.
 	 * @param collisionW	width of the Hitbox.
 	 * @param collisionH	height of the Hitbox.
+	 * @param imageName	the name of the image's file (with type).
 	 * @return	the Prop.
 	 */
-	public Prop createProp(Sprite sprite, double collisionW, double collisionH) {
-		Prop p = new Prop(sprite, collisionW, collisionH);
+	public Prop createProp(double collisionW, double collisionH, String imageName) {
+		
+		Sprite spr = SpriteManager.getInstance().getSprite(imageName);
+		
+		Prop p = new Prop(spr, collisionW, collisionH);
 		register(p);
 		return p;
 	}
