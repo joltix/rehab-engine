@@ -1,5 +1,8 @@
 package com.rehab.animation;
 
+
+import com.rehab.user.MouseMap;
+import com.rehab.user.WASDKeyMap;
 import com.rehab.world.Actor;
 import com.rehab.world.Arena;
 import com.rehab.world.Hitbox;
@@ -17,6 +20,7 @@ public class LWMain {
 	
 	public static void main(String[] args) {
 
+		Actor player = initPlayer();
 		Actor dummy = initDummy();
 		Prop floor = initFloor();
 		floor.setVisibility(false);
@@ -30,6 +34,9 @@ public class LWMain {
 		
 		// Begin rendering
 		LWCanvas canvas = LWCanvas.create(mWidth, mHeight, "Rehab", false);
+		
+		initControls(canvas, dummy);
+		
 		canvas.show();
 		
 	}
@@ -121,6 +128,75 @@ public class LWMain {
 		
 		System.out.println("Dummy id: " + dummy.getId());
 		return dummy;
+	}
+	
+	/**
+	 * Initializes the mouse and keyboard inputs.
+	 * 
+	 * @param canvas	the window.
+	 * @param player	the player to control.
+	 */
+	private static void initControls(LWCanvas canvas, Actor player) {
+		WASDKeyMap keyMap = new WASDKeyMap(){
+
+			@Override
+			public void onW(boolean release) {
+			}
+
+			@Override
+			public void onA(boolean release) {
+				player.moveBy(-5, 0);
+			}
+
+			@Override
+			public void onS(boolean release) {
+				
+			}
+
+			@Override
+			public void onD(boolean release) {
+				player.moveBy(5, 0);
+			}
+
+			@Override
+			public void onEnter(boolean release) {
+				
+			}
+
+			@Override
+			public void onSpace(boolean release) {
+				
+			}
+
+			@Override
+			public void onKey(int key, boolean release) {
+				
+			}};
+			
+		MouseMap mouseMap = new MouseMap(canvas.getHeight()){
+
+			@Override
+			public void onLeftClick(double x, double y, boolean press) {
+				if (press) {
+					System.out.printf("Left press on (%f,%f)\n", x, y);
+				} else {
+					System.out.printf("Left release on (%f,%f)\n", x, y);
+				}
+			}
+
+			@Override
+			public void onRightClick(double x, double y, boolean press) {
+				
+			}
+
+			@Override
+			public void onMiddleClick(double x, double y, boolean press) {
+				
+			}};
+			
+		// Set the control mappings
+		canvas.setKeyMap(keyMap);
+		canvas.setMouseMap(mouseMap);
 	}
 	
 }
