@@ -14,7 +14,7 @@ public class CircularArray<E> extends ArrayList<E> {
 	 */
 	@Override
 	public E get(int index) {
-		// TODO Auto-generated method stub
+		
 		//if the index we want to get is less than zero
 		//then set index to be index+size
 				int size = size();
