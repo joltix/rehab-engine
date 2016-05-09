@@ -1,5 +1,6 @@
 package com.rehab.world;
 
+import javafx.scene.input.MouseEvent;
 
 public class Projectile extends Entity {
 
@@ -68,6 +69,13 @@ public class Projectile extends Entity {
 	}
 
 	@Override
-	public void onClick() { throw new UnsupportedOperationException("Projectiles should not be clickable"); }
+	public void onMousePress(MouseEvent event) {
+		throw new UnsupportedOperationException("Projectiles should not be clickable");		
+	}
+
+	@Override
+	public void onMouseRelease(MouseEvent event) {
+		throw new UnsupportedOperationException("Projectiles should not be clickable");		
+	}
 
 }
