@@ -1,5 +1,7 @@
 package com.rehab.animation;
 
+import javafx.scene.input.MouseEvent;
+
 public interface Drawable {
 	
 	double getX ();
@@ -15,13 +17,16 @@ public interface Drawable {
 	void setSprite(Sprite s); 
 	
 	int getZ();
-	
-	void onClick();
-	
+		
 	boolean isVisible();
 	
 	float getRotation();
 	
-	void setRotation(float f); 
+	void setRotation(float f);
 	
+	boolean isFacingLeft();
+	
+	void onMousePress(MouseEvent event);
+	
+	void onMouseRelease(MouseEvent event);	
 }
