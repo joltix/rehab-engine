@@ -1,15 +1,6 @@
 package com.rehab.user;
 
 import com.rehab.world.Actor;
-import com.rehab.world.Main;
-import com.rehab.world.SpawnManager;
-import com.rehab.world.Vector2D.Point;
-
-import javafx.event.EventHandler;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.stage.Stage;
 
 /*
  * 
@@ -19,36 +10,55 @@ import javafx.stage.Stage;
  * the up, down, right or left arrow keys.
  * 
  */
-public class Movement {
+public class Movement extends WASDKeyMap {
 
+	private Actor mPlayer;
+	
 	/**
 	 * Constructor to handle the movement of a character when the up, down,
 	 * left or right arrow keys are clicked.
 	 * 
-	 * @param canvas
-	 * @param character
+	 * @param player	the Actor to be controlled by the user.s
 	 */
-	public Movement(Canvas canvas, Actor character, Stage primaryStage) {
-		canvas.setFocusTraversable(true);
-		canvas.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
-			@Override
-			public void handle(KeyEvent click) {
-				KeyCode code = click.getCode();
-				if (code == KeyCode.RIGHT) {
-					// Move player right
-					character.moveBy(5, 0);
-					
-				} else if (code == KeyCode.LEFT) {
-					// Move player left
-					character.moveBy(-5, 0);
-					
-				} else if (code == KeyCode.SPACE) {
-					// Spawn a new dummy at the top of the screen
-					Actor dummy = Main.getDummy();
-					SpawnManager.getInstance().immediateSpawn(dummy, new Point(128, 480));
-				}
-			}
-		});		
+	public Movement(Actor player) {
+		
+		mPlayer = player;
+	}
 
+	@Override
+	public void onW(boolean release) {
+		
+	}
+
+	@Override
+	public void onA(boolean release) {
+		// Move player to the left
+		mPlayer.moveBy(-5, 0);
+	}
+
+	@Override
+	public void onS(boolean release) {
+		
+	}
+
+	@Override
+	public void onD(boolean release) {
+		// Move player to the right
+		mPlayer.moveBy(5, 0);
+	}
+
+	@Override
+	public void onEnter(boolean release) {
+		
+	}
+
+	@Override
+	public void onSpace(boolean release) {
+		
+	}
+
+	@Override
+	public void onKey(int key, boolean release) {
+		
 	}
 }
