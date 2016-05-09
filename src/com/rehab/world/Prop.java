@@ -2,6 +2,8 @@ package com.rehab.world;
 
 import com.rehab.animation.Sprite;
 
+import javafx.scene.input.MouseEvent;
+
 /**
  * <p>
  * Props are game objects that are not meant to threaten the player. These
@@ -97,7 +99,13 @@ public class Prop extends Entity {
 	}
 
 	@Override
-	public void onClick() {
+	public void onMousePress(MouseEvent event) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onMouseRelease(MouseEvent event) {
 		// TODO Auto-generated method stub
 		
 	}
