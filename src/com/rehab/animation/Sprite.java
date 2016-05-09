@@ -48,8 +48,8 @@ public class Sprite {
 	/**
 	 * Boolean method that add a set of images into a Hashtable
 	 * 
-	 * @param r
-	 * @param b
+	 * @param r	String of the animation name
+	 * @param b	the array of texture that is associated with the name
 	 * @return false if it can not add, true otherwise
 	 */
 	public boolean add(String r, CircularArray<Texture2> b) {
@@ -161,7 +161,7 @@ public class Sprite {
 	/**
 	 * Method to set the ID for Sprite
 	 * 
-	 * @param i
+	 * @param the Sprite name
 	 */
 	public void setId(String i) {	mFileName = i;	}
 
@@ -169,7 +169,7 @@ public class Sprite {
 	/**
 	 * Getting the ID of a specific Sprite
 	 * 
-	 * @return the ID
+	 * @return the sprite name which is the ID
 	 */
 	public String getId() {	return mFileName;	}
 

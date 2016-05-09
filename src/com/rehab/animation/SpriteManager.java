@@ -13,7 +13,6 @@ public class SpriteManager extends Register{
 
 	private static SpriteManager spriteMgmt;
 
-	//private int spriteId = 1;
 
 	private Hashtable<String, Sprite> spriteNum = new Hashtable<String, Sprite>();
 
@@ -24,9 +23,11 @@ public class SpriteManager extends Register{
 	private SpriteManager() {
 	}
 
-	/*
+	/**
 	 * Make sure that there is ever only one instance of the Sprite Manager
 	 * Enforces the singleton property
+	 * 
+	 * @return the instance of the Sprite Manager
 	 */
 	public static SpriteManager getInstance() {
 		synchronized (SpriteManager.class) {
@@ -42,27 +43,27 @@ public class SpriteManager extends Register{
 	 * @throws IOException
 	 */
 	public static void loadFolder(String folderName) throws IOException {
-		
+
 		String path = SpriteManager.class.getResource(folderName).getPath();
 		File folder = new File(path);
-		
+
 		File[] files = folder.listFiles(); 		// array of objs
 
 		SpriteManager s = getInstance();
-		
+
 		for (int i = 0; i < files.length; i++) {		// reading in files from the folder
-												
+
 			File file = files[i];
 			if (file.isFile() && SpriteManager.isImage(file)) {				// if this is a file then add get the filename
 				s.createSprite(file.getPath());
-			
-				
+
+
 			}
 
 		}
 
 	}
-	
+
 	/**
 	 * Checks whether or not a given File is a supported image (jpg or png).
 	 * 
@@ -72,15 +73,15 @@ public class SpriteManager extends Register{
 	private static boolean isImage(File file) {
 		String name = file.getName();
 		int typeIndex = name.indexOf('.') + 1;
-		
+
 		// Not a picture if file name begins with period
 		if (typeIndex < 0) {
 			return false;
 		}
-		
+
 		// Extract file type
 		String type = name.substring(typeIndex, name.length());
-		
+
 		// Compare for supported image types
 		if (type.equalsIgnoreCase("png") || type.equalsIgnoreCase("jpg")) {
 			return true;
@@ -89,9 +90,9 @@ public class SpriteManager extends Register{
 		}
 	}
 
-	/*
-	 * Checks in the Hash table and get the count of the size
-	 * 
+	/**
+	 * Get the count of total number sprite in the hash table
+	 * @return the number of sprite that is currently loaded in the database
 	 */
 	public int getSpriteCount() {
 		return spriteNum.size();
@@ -110,11 +111,11 @@ public class SpriteManager extends Register{
 	private boolean register(String imageName, Sprite s) {
 		// add it to the hash table
 		synchronized (spriteMgmt) {
-			
+
 			if (spriteNum.containsKey(imageName)) {
 				return false;
 			}
-			
+
 			s.setId(imageName);
 			spriteNum.put(imageName, s);
 
@@ -134,7 +135,7 @@ public class SpriteManager extends Register{
 		synchronized (spriteMgmt) {
 			String id = s.getId();
 
-		
+
 			if (spriteNum.remove(id) == null) {
 				return false;
 			}
@@ -142,14 +143,14 @@ public class SpriteManager extends Register{
 		}
 
 	}
-	
+
 	/**
 	 * Check if the Sprite is Registered in the Hash table
 	 * 
-	 * @param id
+	 * @param String name of the sprite
 	 * @return if the hash table contains the key
 	 */
-	public boolean isRegistered(int id) {
+	public boolean isRegistered(String id) {
 		synchronized (spriteMgmt) {
 
 			return spriteNum.containsKey(id);
@@ -159,12 +160,12 @@ public class SpriteManager extends Register{
 	/**
 	 * Method that will get the Sprite object associated with that given ID
 	 * 
-	 * @param id
-	 * @return
+	 * @param String name of the Sprite which its ID
+	 * @return true the ID is in the hash table and if we successfully return it, false otherwise
 	 */
 	public Sprite getSprite(String id) {
 		synchronized (spriteMgmt) {
-	
+
 			if (spriteNum.containsKey(id)) {
 				return spriteNum.get(id);
 
@@ -183,13 +184,13 @@ public class SpriteManager extends Register{
 	 */
 	private Sprite createSprite(String fileName){
 		String file = SpriteManager.extractFilename(fileName);
-		
+
 		Sprite s = new Sprite(fileName);
 		register(file, s);
 		return s;
-		
+
 	}
-	
+
 	/**
 	 * Gets the filename and type from a path (the last element of the path) with a
 	 * path that uses backslashes '\'.
@@ -199,27 +200,27 @@ public class SpriteManager extends Register{
 	 * does not exist in the path.
 	 */
 	private static String extractFilename(String path) {
-		
+
 		int periodIndex = -1;
 		for (int i = path.length() - 1; i >= 0; i--) {
-			
+
 			char c  = path.charAt(i);
-		
+
 			// Mark wherever a period is found
 			if (c == '.') {
 				periodIndex = i;
 			}
-			
+
 			if (c == '\\') {
 				return path.substring(i + 1);
 			}
 		}
-		
+
 		// Didn't find backslash implies file in same directory (but found period)
 		if (periodIndex != -1) {
 			return path;
 		}
-		
+
 		// Couldn't find a file
 		return null;
 	}

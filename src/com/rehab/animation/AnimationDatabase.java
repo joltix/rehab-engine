@@ -12,7 +12,7 @@ public class AnimationDatabase {
 	//assoc the entity id with the image index
 	private Hashtable<Integer, Integer> mUpdateCurrAni; 
 	boolean isFirstPic = false;
-	
+
 	/**
 	 * Add the current animation into the hash table
 	 * 
@@ -39,8 +39,8 @@ public class AnimationDatabase {
 	 * @return the String name
 	 */
 	public String getAni(Integer id){	return mCurrentAnimation.get(id);	}
-		
-	
+
+
 	/**
 	 * Get the array of texture 
 	 * 
@@ -48,7 +48,7 @@ public class AnimationDatabase {
 	 * @return an array of texture(s) 
 	 */
 	public CircularArray<Texture2> getTexArr(String name){		return mReelsNameAssoc.get(name);		}
-	
+
 
 	/**
 	 * To retrieve the current image index that is currently animating and then 
@@ -61,28 +61,27 @@ public class AnimationDatabase {
 		String animation= mCurrentAnimation.get(id);
 		//gets  the actual array assoc with the name
 		CircularArray<Texture2> arr = mReelsNameAssoc.get(animation);
-		
 
-		if(mUpdateCurrAni.containsKey(id)){				//checks if the key is in the hash table
-			
+
+		//checks if the key is in the hash table
+		if(mUpdateCurrAni.containsKey(id)){				
 			int imgIndex = mUpdateCurrAni.get(id);		// Retrieve the last draw's image index
-			
+
 			mUpdateCurrAni.remove(id);							//remove it 
-			
+
 			if(imgIndex < arr.size()-1){						//check if the current index is still within bound
-				
+
 				imgIndex++;       							 //increment the index
-				
+
 				mUpdateCurrAni.put(id, imgIndex); 	//  put next index in
 			}else {
-				
+
 				imgIndex=0;  					 //when we are at the last index wrap back to the beginning
 			}
 
 		}else {
-			
-			mUpdateCurrAni.put(id,0);			//else is it not in the table we add with the index being 0
-
+			//else is it not in the table we add with the index being 0
+			mUpdateCurrAni.put(id,0);			
 		}
 
 
@@ -92,8 +91,8 @@ public class AnimationDatabase {
 	 * Method that will add the reels, of images, or animation into
 	 * reelsNameAssoc Hashtable with a string name
 	 * 
-	 * @param id
-	 * @param i
+	 * @param String name of the animation
+	 * @param The reels of textures 
 	 * @return true if successfully added into the Hashtable false otherwise
 	 */
 	public boolean addAni(String id, CircularArray<Texture2> i) {
@@ -114,13 +113,13 @@ public class AnimationDatabase {
 	 * @return
 	 * the image
 	 */
-//	public Image getImage(String entityAniName, int frameID) {
-//
-//		CircularArray<Texture> frame = mReelsNameAssoc.get(entityAniName);	//return the reels
-//
-//		Image i = frame.get(frameID);		//return the frame
-//			
-//		return i; 
-//	}
+		public Texture2 getImage(String entityAniName, int frameID) {
+	
+			CircularArray<Texture2> frame = mReelsNameAssoc.get(entityAniName);	//return the reels
+	
+			Texture2 i = frame.get(frameID);		//return the frame
+				
+			return i; 
+		}
 
 }

@@ -12,9 +12,11 @@ import org.lwjgl.stb.STBImage;
 
 
 public class Texture2 {
-
+	//bytebuffer of which we are getting from the texture load
 	private ByteBuffer mImage;
+	// the bytebuffer that is created when reading the file
 	private ByteBuffer mImageBuffer;
+	//width, height and transparency of the texture
 	private IntBuffer mW;
 	private IntBuffer mH;
 	private IntBuffer mC;
@@ -40,7 +42,7 @@ public class Texture2 {
 	/**
 	 * Get Width method for the texture
 	 * 
-	 * @return
+	 * @return the width of the texture
 	 */
 	public int getWidth() {
 		return mW.get(0);
@@ -49,7 +51,7 @@ public class Texture2 {
 	/**
 	 * Get Height for the texture
 	 * 
-	 * @return
+	 * @return the height of the texture
 	 */
 	public int getHeight() {
 		return mH.get(0);
@@ -58,7 +60,7 @@ public class Texture2 {
 	/**
 	 * Get the transparency of the texture
 	 * 
-	 * @return
+	 * @return an integer of the transparency variable
 	 */
 	public int getComp() {
 		return mC.get(0);
@@ -68,7 +70,7 @@ public class Texture2 {
 	 * Helper method to load the image file into a texture to then be drawn on
 	 * the Canvas
 	 * 
-	 * @param filename
+	 * @param string name of the file you want to load
 	 */
 	private void loadTexture(String filename) {
 
@@ -94,10 +96,9 @@ public class Texture2 {
 /**
  * Helper method that reads in a file specifying a filename 
  * 
- * @param resource
- * @return
- * ByteBuffer
- * @throws IOException
+ * @param String name of the file
+ * @return ByteBuffer, the pixel data version of the image but in bytes
+ * @throws IOException if the file cann not be read or if invalid
  */
 	private ByteBuffer readFile(String resource) throws IOException{
 	    File file = new File(resource);	   
