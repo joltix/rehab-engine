@@ -1,14 +1,44 @@
 package com.rehab.user;
 
+/**
+ * Provides constants for the main screen resolutions.
+ */
 public abstract class Resolution {
 	
-	static final int FOUR_KW = 3840;
-	static final int FOUR_KH = 2160;
-	static final int F_HDW = 1080;
-	static final int F_HDH = 1920;
-	static final int HDW = 1366;
-	static final int HDH = 768;
-	static final int Q_HDW = 2560;
-	static final int Q_HDH = 1440;	
+	/**
+	 * Width of average laptop resolution.
+	 */
+	public static final int HD_W = 1366;
+	/**
+	 * Height of average laptop resolution.
+	 */
+	public static final int HD_H = 768;
+	
+	/**
+	 * Width of 1080p resolution common amongst televisions.
+	 */
+	public static final int FHD_W = 1920;
+	/**
+	 * Height of 1080p resolution common amongst televisions.
+	 */
+	public static final int FHD_H = 1080;
+	
+	/**
+	 * Width of 2K resolution common amongst gaming monitors and some higher end laptops and phones.
+	 */
+	public static final int QHD_W = 2560;
+	/**
+	 * Height of 2K resolution common amongst gaming monitors and some higher end laptops and phones.
+	 */
+	public static final int QHD_H = 1440;	
+	
+	/**
+	 * Width of 4K resolution used in high-end laptops, monitors, and televisions.
+	 */
+	public static final int UHD_W = 3840;
+	/**
+	 * Height of 4K resolution used in high-end laptops, monitors, and televisions.
+	 */
+	public static final int UHD_H = 2160;
 	
 }
