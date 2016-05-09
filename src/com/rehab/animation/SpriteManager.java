@@ -15,7 +15,7 @@ public class SpriteManager extends Register{
 
 	//private int spriteId = 1;
 
-	private Hashtable<String, Sprite> spriteNum;
+	private Hashtable<String, Sprite> spriteNum = new Hashtable<String, Sprite>();
 
 	/*
 	 * Private constructor for Spite Manager to prevent the user from actually
@@ -41,7 +41,11 @@ public class SpriteManager extends Register{
 	 * @param folder
 	 * @throws IOException
 	 */
-	public static void loadFolder( final File folder) throws IOException {
+	public static void loadFolder(String folderName) throws IOException {
+		
+		String path = SpriteManager.class.getResource(folderName).getPath();
+		File folder = new File(path);
+		
 		File[] files = folder.listFiles(); 		// array of objs
 
 		SpriteManager s = getInstance();
@@ -49,10 +53,8 @@ public class SpriteManager extends Register{
 		for (int i = 0; i < files.length; i++) {		// reading in files from the folder
 												
 			File file = files[i];
-			String fileName = file.getName();
 			if (file.isFile() && SpriteManager.isImage(file)) {				// if this is a file then add get the filename
-				System.out.println(file.getName());				
-				s.createSprite(fileName);
+				s.createSprite(file.getPath());
 			
 				
 			}
@@ -78,11 +80,9 @@ public class SpriteManager extends Register{
 		
 		// Extract file type
 		String type = name.substring(typeIndex, name.length());
-
 		
 		// Compare for supported image types
 		if (type.equalsIgnoreCase("png") || type.equalsIgnoreCase("jpg")) {
-			System.out.println(type);
 			return true;
 		} else {
 			return false;
@@ -110,7 +110,8 @@ public class SpriteManager extends Register{
 	private boolean register(String imageName, Sprite s) {
 		// add it to the hash table
 		synchronized (spriteMgmt) {
-			if (spriteNum.containsKey(s.getId())) {
+			
+			if (spriteNum.containsKey(imageName)) {
 				return false;
 			}
 			
@@ -181,11 +182,46 @@ public class SpriteManager extends Register{
 	 * 
 	 */
 	private Sprite createSprite(String fileName){
-		 
+		String file = SpriteManager.extractFilename(fileName);
+		
 		Sprite s = new Sprite(fileName);
-		register(fileName, s);
+		register(file, s);
 		return s;
 		
+	}
+	
+	/**
+	 * Gets the filename and type from a path (the last element of the path) with a
+	 * path that uses backslashes '\'.
+	 * 
+	 * @param path	the String representing the full path.
+	 * @return the String filename with type, or null if the filename
+	 * does not exist in the path.
+	 */
+	private static String extractFilename(String path) {
+		
+		int periodIndex = -1;
+		for (int i = path.length() - 1; i >= 0; i--) {
+			
+			char c  = path.charAt(i);
+		
+			// Mark wherever a period is found
+			if (c == '.') {
+				periodIndex = i;
+			}
+			
+			if (c == '\\') {
+				return path.substring(i + 1);
+			}
+		}
+		
+		// Didn't find backslash implies file in same directory (but found period)
+		if (periodIndex != -1) {
+			return path;
+		}
+		
+		// Couldn't find a file
+		return null;
 	}
 
 }
