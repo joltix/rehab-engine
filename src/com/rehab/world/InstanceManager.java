@@ -1,6 +1,7 @@
 package com.rehab.world;
 import java.util.Hashtable;
 
+import com.rehab.animation.Renderer;
 import com.rehab.animation.Sprite;
 
 /**
@@ -178,9 +179,8 @@ public class InstanceManager extends Register {
 			int id = putItem(a);
 
 			// Auto load into game if already began
-			if (ProtoRender.isRunning()) {
+			if (Renderer.isRunning()) {
 				load(a);
-				ProtoRender.getInstance().requestDraw(a);
 			}
 
 			mNumActors++;
@@ -207,9 +207,8 @@ public class InstanceManager extends Register {
 			int id = putItem(p);
 
 			// Auto load into game if already began
-			if (ProtoRender.isRunning()) {
+			if (Renderer.isRunning()) {
 				load(p);
-				ProtoRender.getInstance().requestDraw(p);
 			}
 
 			mNumProjs++;
@@ -236,9 +235,8 @@ public class InstanceManager extends Register {
 			int id = putItem(p);
 
 			// Auto load into game if already began
-			if (ProtoRender.isRunning()) {
+			if (Renderer.isRunning()) {
 				load(p);
-				ProtoRender.getInstance().requestDraw(p);
 			}
 
 			mNumProps++;
@@ -322,6 +320,28 @@ public class InstanceManager extends Register {
 			mNumProps--;
 			return true;
 		}
+	}
+	
+	/**
+	 * Loads all instances into the world listing for drawing.
+	 */
+	public void loadAll() {
+		
+		// Place all registered objects into the right load tables
+		for (Identifiable obj : this.items()) {
+			
+			// Load objects into the appropriate table
+			if (obj instanceof Actor) {
+				load((Actor) obj);
+			} else if (obj instanceof Prop) {
+				load((Prop) obj);
+			} else if (obj instanceof Projectile) {
+				load((Projectile) obj);
+
+			}
+			
+		}
+		
 	}
 
 	/**
