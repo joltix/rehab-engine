@@ -1,114 +1,170 @@
 package com.rehab.animation;
+import java.io.File;
+import java.io.IOException;
 import java.util.Hashtable;
 import com.rehab.world.Entity;
 import com.rehab.world.InstanceManager;
-
+import com.rehab.world.Register;
 
 /*
  *Sprite Manager Class that tracks all of the Sprite created in the game
  */
-public class SpriteManager {
+public class SpriteManager extends Register{
 
 	private static SpriteManager spriteMgmt;
 
-	private  int spriteId = 1; 
+	//private int spriteId = 1;
 
-	private  Hashtable<Integer, Sprite> spriteNum; 
+	private Hashtable<String, Sprite> spriteNum;
 
 	/*
-	 * Private constructor for Spite Manager to prevent the user from 
-	 * actually manipulating the object 
+	 * Private constructor for Spite Manager to prevent the user from actually
+	 * manipulating the object
 	 */
-	private SpriteManager(){                                           }
+	private SpriteManager() {
+	}
 
 	/*
 	 * Make sure that there is ever only one instance of the Sprite Manager
-	 * Enforces the singleton property 
+	 * Enforces the singleton property
 	 */
 	public static SpriteManager getInstance() {
-		synchronized (spriteMgmt) {
-			if (spriteMgmt == null) spriteMgmt = new SpriteManager();
+		synchronized (SpriteManager.class) {
+			if (spriteMgmt == null)
+				spriteMgmt = new SpriteManager();
 			return spriteMgmt;
 		}
 	}
-/*
- * Checks in the Hashtable and get the count of the size
- * 
- */
-	public int getSpriteCount (){
+	/**
+	 * Method to load multiple files from a folder to texture
+	 * 
+	 * @param folder
+	 * @throws IOException
+	 */
+	public static void loadFolder( final File folder) throws IOException {
+		File[] files = folder.listFiles(); 		// array of objs
+
+		SpriteManager s = getInstance();
+		
+		for (int i = 0; i < files.length; i++) {		// reading in files from the folder
+												
+			File file = files[i];
+			String fileName = file.getName();
+			if (file.isFile() && SpriteManager.isImage(file)) {				// if this is a file then add get the filename
+				System.out.println(file.getName());				
+				s.createSprite(fileName);
+			
+				
+			}
+
+		}
+
+	}
+	
+	/**
+	 * Checks whether or not a given File is a supported image (jpg or png).
+	 * 
+	 * @param file	the File to check.
+	 * @return true if the File is jpg or png, false otherwise.
+	 */
+	private static boolean isImage(File file) {
+		String name = file.getName();
+		int typeIndex = name.indexOf('.') + 1;
+		
+		// Not a picture if file name begins with period
+		if (typeIndex < 0) {
+			return false;
+		}
+		
+		// Extract file type
+		String type = name.substring(typeIndex, name.length());
+
+		
+		// Compare for supported image types
+		if (type.equalsIgnoreCase("png") || type.equalsIgnoreCase("jpg")) {
+			System.out.println(type);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/*
+	 * Checks in the Hash table and get the count of the size
+	 * 
+	 */
+	public int getSpriteCount() {
 		return spriteNum.size();
 
 	}
 
-/*
- * Generate a unique int ID for each of the Sprite Object 
- */
-	private int generateSpriteId() {
-		synchronized (spriteMgmt) {
-			int id = spriteId;
-			spriteId++;
-			return id;
-		}
-	}
+
 
 	/**
-	 * To add a new Sprite into the Hashtable
-	 * @param s
-	 * @return
-	 * True when the sprite is successfully added to the Hashtable 
+	 * Method to add a new Sprite into the Hash table
+	 * 
+	 * @param the name of the image and a Sprite 
+	 * @return True when the sprite is successfully added to the Hash table
+	 * 
 	 */
-	public boolean register(Sprite s){
-		//add it to the hashtable
-		synchronized (spriteMgmt){
-			if(spriteNum.containsKey(s.getId())){
-				return false; 
+	private boolean register(String imageName, Sprite s) {
+		// add it to the hash table
+		synchronized (spriteMgmt) {
+			if (spriteNum.containsKey(s.getId())) {
+				return false;
 			}
-			int id = generateSpriteId(); 
-			s.setId(id);
-			spriteNum.put(id, s); 
-
+			
+			s.setId(imageName);
+			spriteNum.put(imageName, s);
 
 			return true;
 		}
 
-
 	}
-/**
- * Remove the Sprite from the Hashtable 
- * @param s
- * @return
- * True if we have successfully remove the Sprite from the Hashtable 
- */
-	public boolean unregister(Sprite s){
-		synchronized (spriteMgmt){
-			int id=s.getId(); 
 
-			//check if the id is actually in the hashtable
-			//if it is remove return true
-			//if not then return false do nothing
+	/**
+	 * Remove the Sprite from the Hash table
+	 * 
+	 * @param Sprite 
+	 * @return True if we have successfully remove the Sprite from the Hash table
+	 */
+	@SuppressWarnings("unused")
+	private boolean unregister(Sprite s) {
+		synchronized (spriteMgmt) {
+			String id = s.getId();
 
-			if(spriteNum.remove(id)==null){ 
-				return false; 
+		
+			if (spriteNum.remove(id) == null) {
+				return false;
 			}
-			spriteNum.remove(id); 
 			return true; 
-
 		}
 
 	}
+	
+	/**
+	 * Check if the Sprite is Registered in the Hash table
+	 * 
+	 * @param id
+	 * @return if the hash table contains the key
+	 */
+	public boolean isRegistered(int id) {
+		synchronized (spriteMgmt) {
 
-	public boolean isRegistered(int id){
-		synchronized (spriteMgmt){
-
-			return spriteNum.containsKey(id); 
+			return spriteNum.containsKey(id);
 		}
 	}
 
-	public Sprite getSprite(int id){
-		synchronized (spriteMgmt){
-			//given the id return the assoc sprite 
-			//if not in the hashtable then true
-			if(spriteNum.containsKey(id)){
+	/**
+	 * Method that will get the Sprite object associated with that given ID
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public Sprite getSprite(String id) {
+		synchronized (spriteMgmt) {
+	
+			if (spriteNum.containsKey(id)) {
 				return spriteNum.get(id);
 
 			}
@@ -116,5 +172,22 @@ public class SpriteManager {
 
 		}
 	}
+	/**
+	 * Method that will automatically create a Sprite without the user
+	 * touching any of the internal functions
+	 * 
+	 * @param fileName
+	 * @return a Sprite
+	 * 
+	 */
+	private Sprite createSprite(String fileName){
+		 
+		Sprite s = new Sprite(fileName);
+		register(fileName, s);
+		return s;
+		
+	}
 
 }
+
+

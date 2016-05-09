@@ -1,4 +1,5 @@
 package com.rehab.animation;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -7,64 +8,88 @@ import java.nio.IntBuffer;
 import java.nio.channels.FileChannel;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.stb.STBImage;
+
+
 public class Texture2 {
-	private int width;
-	private int height; 
-	private int comp;
-	ByteBuffer image;
-	ByteBuffer imageBuffer;
-	IntBuffer w ;
-    IntBuffer h ;
-    IntBuffer c ;
-	//add a method to get all of the files from a folder, i.e. for loop get names and put that as the paramter
-	
-	public Texture2 (String filename){
-		 
-		    try{
-		        imageBuffer = readFile(filename);
-		    }
-		    catch (IOException e) {
-		        throw new RuntimeException(e);
-		    }
-		    
-		    loadTexture(filename);
+
+	private ByteBuffer mImage;
+	private ByteBuffer mImageBuffer;
+	private IntBuffer mW;
+	private IntBuffer mH;
+	private IntBuffer mC;
+
+	/**
+	 * Texture Class that takes in a filename and convert to Byte Buffer
+	 * 
+	 * @param filename
+	 */
+	public Texture2(String filename) {
+
+		try {
+			mImageBuffer = readFile(filename);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		loadTexture(filename);
 	}
+
 	
-	public int getWidth(){
-		return  width = w.get(0);
+
+	/**
+	 * Get Width method for the texture
+	 * 
+	 * @return
+	 */
+	public int getWidth() {
+		return mW.get(0);
 	}
-	
-	public int getHeight(){
-		return  height = h.get(0);
+
+	/**
+	 * Get Height for the texture
+	 * 
+	 * @return
+	 */
+	public int getHeight() {
+		return mH.get(0);
 	}
-	
-	public int getComp(){
-		return comp = c.get(0);
+
+	/**
+	 * Get the transparency of the texture
+	 * 
+	 * @return
+	 */
+	public int getComp() {
+		return mC.get(0);
 	}
-	
-	public void rotate(float angle, float x, float y){
-		GL11.glRotatef(angle, x, y, 1);
+
+	/**
+	 * Helper method to load the image file into a texture to then be drawn on
+	 * the Canvas
+	 * 
+	 * @param filename
+	 */
+	private void loadTexture(String filename) {
+
+		mW = BufferUtils.createIntBuffer(1);
+		mH = BufferUtils.createIntBuffer(1);
+		mC = BufferUtils.createIntBuffer(1);
+
+		mImage = STBImage.stbi_load_from_memory(mImageBuffer, mW, mH, mC, 0);
+		// if can not open the file then throw an error
+		if (mImage == null) {
+			throw new RuntimeException("Failed to load image: " + STBImage.stbi_failure_reason());
+		}
+		
 	}
-	private void loadTexture(String filename){
-	
-		w = BufferUtils.createIntBuffer(1);
-		h = BufferUtils.createIntBuffer(1);
-	    c = BufferUtils.createIntBuffer(1);
-	    
-	    image = STBImage.stbi_load_from_memory(imageBuffer, w, h, c, 0);
-	    //if can not open the file then throw an error
-	    if(image == null){
-	        throw new RuntimeException("Failed to load image: " + STBImage.stbi_failure_reason());
-	    }
-	}
-	
-	
-public 	ByteBuffer getByteBuffer (){
-	
-	return image;
-}
+
+	/**
+	 * Getter for the ByteBuffer from an image we want from
+	 * 
+	 * @return ByteBuffer of the image we want to load
+	 */
+	public ByteBuffer getByteBuffer() {	return mImage;	}
 	
 /**
  * Helper method that reads in a file specifying a filename 
@@ -75,22 +100,20 @@ public 	ByteBuffer getByteBuffer (){
  * @throws IOException
  */
 	private ByteBuffer readFile(String resource) throws IOException{
-	    File file = new File(this.getClass().getResource(resource).getPath());
+	    File file = new File(resource);	   
 
-	    System.out.printf("File name: %s\n", file.getName());
-	    
-	    FileInputStream fis = new FileInputStream(file);
-	    FileChannel fc = fis.getChannel();
+		FileInputStream fis = new FileInputStream(file);
+		FileChannel fc = fis.getChannel();
 
-	    ByteBuffer buffer = BufferUtils.createByteBuffer((int) fc.size() + 1);
+		ByteBuffer buffer = BufferUtils.createByteBuffer((int) fc.size() + 1);
 
-	    while(fc.read(buffer) != -1);
+		while (fc.read(buffer) != -1)	;
 
-	    fis.close();
-	    fc.close();
-	    buffer.flip();
+		fis.close();
+		fc.close();
+		buffer.flip();
 
-	    return buffer;
+		return buffer;
 	}
-
+	
 }
