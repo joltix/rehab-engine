@@ -38,10 +38,8 @@ public class Sprite {
 	 */
 	public Sprite(String fileName) {
 		
-		System.out.printf("File name %s\n", fileName);
-		String path = Sprite.class.getResource(fileName).getPath();
 		//create the texture from the specified filename 
-		mTex = new Texture2(path); 		
+		mTex = new Texture2(fileName); 		
 		//add the sprite into the database each time we create one 
 		mData = new AnimationDatabase();
 	
