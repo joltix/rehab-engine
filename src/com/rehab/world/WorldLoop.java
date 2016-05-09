@@ -1,8 +1,7 @@
 package com.rehab.world;
 
-import java.util.Hashtable;
 
-import com.rehab.world.Vector2D.Point;
+import com.rehab.animation.Renderer;
 
 public class WorldLoop extends Thread {
 	
@@ -14,7 +13,6 @@ public class WorldLoop extends Thread {
 	private long mLastTickStart = 0;
 	private long mLastTickDuration = 0;
 	
-	private long mTickLast = 0, mTickDelta = 0;
 	// Whether or not to keep looping
 	private boolean mLoop = true;
 	
@@ -23,10 +21,9 @@ public class WorldLoop extends Thread {
 	
 	// The level to run
 	private Arena mLvl;
-	
+	// Source of Frames to fill and send for drawing
 	private FrameDepot mDepot = FrameDepot.getInstance();
 	
-	private Hashtable<Integer, Point> locations = new Hashtable<Integer, Point>();
 		
 	/**
 	 * Gets an instance of the WorldLoop. This method should only be used if getInstance(int, Arena)
@@ -77,6 +74,9 @@ public class WorldLoop extends Thread {
 	 */
 	public int getTickRate() { return mTarTick; }
 	
+	/**
+	 * Stops the WorldLoop from running.
+	 */
 	public void halt() {
 		mLoop = false;
 	}
@@ -105,6 +105,10 @@ public class WorldLoop extends Thread {
 			Iterable<Prop> props = manager.getLoadedProps();
 			
 			Frame frame = mDepot.requestFrame();
+			if (frame == null) {
+				frame = new Frame();
+			}
+			
 			// Send draw requests for all visible game objs
 			for (Actor a : acts) {
 				if (a.isVisible()) {
@@ -121,8 +125,7 @@ public class WorldLoop extends Thread {
 					frame.push(p);
 				}
 			}
-			ProtoRender.getInstance().requestDraw(frame);
-			
+			Renderer.getInstance().requestDraw(frame);
 			
 			long currentDuration = System.nanoTime() - mLastTickStart;
 			if (currentDuration < mTickInterval) {
