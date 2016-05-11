@@ -2,16 +2,13 @@ package com.rehab.user;
 
 
 import com.rehab.animation.Drawable;
+import com.rehab.animation.LWCanvas;
 import com.rehab.world.Actor;
-
-import javafx.event.EventHandler;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.input.MouseEvent;
 
 /*
  * A class to detect when the mouse is clicked inside of the canvas.
  */
-public class Mouse {
+public class Mouse extends MouseMap {
 
 	Iterable<Drawable> coordinates;
 	
@@ -21,29 +18,28 @@ public class Mouse {
 	 * Constructor to initialize a linked list of Drawable objects and capture
 	 * the click of the mouse.
 	 * 
-	 * @param canvas
 	 * @param drawables
 	 * @param player
 	 */
-	public Mouse(Canvas canvas, Iterable<Drawable> drawables, Actor player) {
-		coordinates = drawables;
+	public Mouse(Actor player) {
+		super(LWCanvas.getInstance().getHeight());
 		mPlayer = player;
 		
-		canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
-
-			@Override
-			public void handle(MouseEvent press) {
-				iterate(press, true);
-			}}  );
-		
-		canvas.setOnMouseReleased(new EventHandler<MouseEvent>() {
-
-			@Override
-			public void handle(MouseEvent release) {
-				double xMouse = release.getX(), yMouse = 480 - release.getY();
-				iterate(release, false);
-				mPlayer.fireAt(xMouse, yMouse);
-			}} );
+//		canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
+//
+//			@Override
+//			public void handle(MouseEvent press) {
+//				iterate(press, true);
+//			}}  );
+//		
+//		canvas.setOnMouseReleased(new EventHandler<MouseEvent>() {
+//
+//			@Override
+//			public void handle(MouseEvent release) {
+//				double xMouse = release.getX(), yMouse = 480 - release.getY();
+//				iterate(release, false);
+//				mPlayer.fireAt(xMouse, yMouse);
+//			}} );
 	}
 
 	/**
@@ -53,24 +49,47 @@ public class Mouse {
 	 * @param xMouse
 	 * @param yMouse
 	 */
-	public void iterate(MouseEvent click, boolean pressed) {
-		double xMouse = click.getX(), yMouse = 480 - click.getY();
+	public void iterate(double x, double y, boolean release) {
 		
 		for (Drawable draw : coordinates) {
-			double x = draw.getX();
-			double y = draw.getY();
+			double objX = draw.getX();
+			double objY = draw.getY();
 			double width = draw.getWidth();
 			double height = draw.getHeight();
-			if (xMouse > x && xMouse < width + x) {
-				if (yMouse <= y && yMouse >= y - height) {
-					if(pressed){
-					draw.onMousePress(click);
+			
+			// Check if click location is within object's square
+			if (x > objX && x < width + objX) {
+				if (y <= objY && y >= objY - height) {
+					// Trigger the correct callback
+					if (release) {
+						draw.onMouseRelease();
 					} else {
-						draw.onMouseRelease(click);
+						draw.onMousePress();
 					}
 				}
 			}
 		}
+	}
+
+	@Override
+	public void onLeftClick(double x, double y, boolean release) {
+		//iterate(x, y, release);
+		
+		if (release) {
+			mPlayer.fireAt(x, y);
+		}
+	}
+
+	@Override
+	public void onRightClick(double x, double y, boolean release) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onMiddleClick(double x, double y, boolean release) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

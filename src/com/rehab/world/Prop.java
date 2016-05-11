@@ -99,13 +99,13 @@ public class Prop extends Entity {
 	}
 
 	@Override
-	public void onMousePress(MouseEvent event) {
+	public void onMousePress() {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void onMouseRelease(MouseEvent event) {
+	public void onMouseRelease() {
 		// TODO Auto-generated method stub
 		
 	}

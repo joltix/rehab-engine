@@ -69,13 +69,15 @@ public class Projectile extends Entity {
 	}
 
 	@Override
-	public void onMousePress(MouseEvent event) {
-		throw new UnsupportedOperationException("Projectiles should not be clickable");		
+	public void onMousePress() {
+		// TODO Auto-generated method stub
+		
 	}
 
 	@Override
-	public void onMouseRelease(MouseEvent event) {
-		throw new UnsupportedOperationException("Projectiles should not be clickable");		
+	public void onMouseRelease() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

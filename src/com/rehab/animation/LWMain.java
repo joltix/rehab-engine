@@ -3,21 +3,23 @@ package com.rehab.animation;
 
 import java.io.IOException;
 
-import com.rehab.user.MouseMap;
-import com.rehab.user.WASDKeyMap;
+import com.rehab.user.Mouse;
+import com.rehab.user.Movement;
+import com.rehab.user.Resolution;
 import com.rehab.world.Actor;
 import com.rehab.world.Arena;
 import com.rehab.world.Hitbox;
 import com.rehab.world.InstanceManager;
 import com.rehab.world.Projectile;
 import com.rehab.world.Prop;
+import com.rehab.world.Vector2D;
 import com.rehab.world.WorldLoop;
 
 public class LWMain {
 
 	// Desired resolution (if not fullscreen)
-	private static int mWidth = 1920;
-	private static int mHeight = 1080;
+	private static int mWidth = Resolution.HD_W;
+	private static int mHeight = Resolution.HD_H;
 
 	
 	public static void main(String[] args) {
@@ -35,10 +37,7 @@ public class LWMain {
 		Prop floor = initFloor();
 		
 		Arena lvl = initLevel(floor, dummy);
-		
-		Sprite spr = SpriteManager.getInstance().getSprite("git_icon.jpg");
-		System.out.printf("Sprite: %s\n", spr);
-		
+				
 		// Begin game world
 		WorldLoop world = WorldLoop.getInstance(60, lvl);
 		world.start();
@@ -46,7 +45,7 @@ public class LWMain {
 		// Begin rendering
 		LWCanvas canvas = LWCanvas.create(mWidth, mHeight, "Rehab", false);
 		
-		initControls(canvas, dummy);
+		initControls(canvas, player);
 		
 		canvas.show();
 		
@@ -120,21 +119,29 @@ public class LWMain {
 
 	/**
 	 * Sets up the dummy object high at the top of the screen.
-	 * 
+	 * 777
 	 * @return the dummy obj.
 	 */
 	private static Actor initDummy() {
 		InstanceManager instaMan = InstanceManager.getInstance();
 		Actor dummy = instaMan.createActor(62, 100, "twitter_alpha.png");
-		dummy.setCollisionModel(new Hitbox(0, 0, 32, 32));
-		dummy.moveTo(360, 480);
+		Sprite spr = dummy.getSprite();
+		dummy.setCollisionModel(new Hitbox(0, 0, spr.getWidth(), spr.getHeight()));
+		dummy.moveTo(720, 480);
 		
 		dummy.setEnableGravity(true);
 
 		Actor clone = instaMan.createActor(dummy);
-		clone.moveTo(128, 500);
+		clone.moveTo(1000, 500);
 		
-		System.out.println("Dummy id: " + dummy.getId());
+		System.out.printf("Dummy collision: %s\n", dummy.getCollision());
+		
+		for (Vector2D edge : dummy.getCollision().edges()) {
+			System.out.printf("    Edge: %s\n", edge);
+		}
+		
+		
+		
 		return dummy;
 	}
 	
@@ -145,62 +152,9 @@ public class LWMain {
 	 * @param player	the player to control.
 	 */
 	private static void initControls(LWCanvas canvas, Actor player) {
-		WASDKeyMap keyMap = new WASDKeyMap(){
-
-			@Override
-			public void onW(boolean release) {
-			}
-
-			@Override
-			public void onA(boolean release) {
-				player.moveBy(-5, 0);
-			}
-
-			@Override
-			public void onS(boolean release) {
-				
-			}
-
-			@Override
-			public void onD(boolean release) {
-				player.moveBy(5, 0);
-			}
-
-			@Override
-			public void onEnter(boolean release) {
-				
-			}
-
-			@Override
-			public void onSpace(boolean release) {
-				
-			}
-
-			@Override
-			public void onKey(int key, boolean release) {
-				
-			}};
+		Movement keyMap = new Movement(player);
 			
-		MouseMap mouseMap = new MouseMap(canvas.getHeight()){
-
-			@Override
-			public void onLeftClick(double x, double y, boolean press) {
-				if (press) {
-					System.out.printf("Left press on (%f,%f)\n", x, y);
-				} else {
-					System.out.printf("Left release on (%f,%f)\n", x, y);
-				}
-			}
-
-			@Override
-			public void onRightClick(double x, double y, boolean press) {
-				
-			}
-
-			@Override
-			public void onMiddleClick(double x, double y, boolean press) {
-				
-			}};
+		Mouse mouseMap = new Mouse(player);
 			
 		// Set the control mappings
 		canvas.setKeyMap(keyMap);

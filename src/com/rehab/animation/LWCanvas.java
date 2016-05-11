@@ -403,36 +403,36 @@ public class LWCanvas {
 
 		// Map the top left corner
 		if (mirror) {
-			GL11.glTexCoord2d(1, 1);
+			GL11.glTexCoord2d(1, 0);
 		} else {
-			GL11.glTexCoord2d(0, 1);
+			GL11.glTexCoord2d(0, 0);
 		}
 		GL11.glVertex2d(0, 0);
 		
 		
 		// Map bottom left
 		if (mirror) {
-			GL11.glTexCoord2d(1, 0);
+			GL11.glTexCoord2d(1, 1);
 		} else {
-			GL11.glTexCoord2d(0, 0);
+			GL11.glTexCoord2d(0, 1);
 		}
-		GL11.glVertex2d(0, height);
+		GL11.glVertex2d(0, -height);
 		
 		
 		// Map bottom right
 		if (mirror) {
-			GL11.glTexCoord2d(0, 0);
+			GL11.glTexCoord2d(0, 1);
 		} else {
-			GL11.glTexCoord2d(1, 0);
+			GL11.glTexCoord2d(1, 1);
 		}
-		GL11.glVertex2d(width, height);
+		GL11.glVertex2d(width, -height);
 		
 		
 		// Map top right
 		if (mirror) {
-			GL11.glTexCoord2d(0, 1);
+			GL11.glTexCoord2d(0, 0);
 		} else {
-			GL11.glTexCoord2d(1, 1);
+			GL11.glTexCoord2d(1, 0);
 		}
 		GL11.glVertex2d(width, 0);
 		

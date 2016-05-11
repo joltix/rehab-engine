@@ -196,6 +196,15 @@ public class Phys {
     public double getY() {
     	return mLocation.getY();
     }
+    
+    /**
+     * Gets a Point containing the Phys' previous location (before a move).
+     * 
+     * @return Point of last location.
+     */
+    public Point getPreviousLocation() {
+    	return new Point(mLastLocation);
+    }
 
     /**
      * Gets the current velocity vector. Altering the values of the returned

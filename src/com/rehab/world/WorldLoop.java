@@ -27,10 +27,9 @@ public class WorldLoop extends Thread {
 		
 	/**
 	 * Constructor for the World's state loop.
-	 * @param tickRate
-	 * 		the desired ticks per second.
-	 * @param arena
-	 * 		the level to simulate.
+	 * 
+	 * @param tickRate	the desired ticks per second.
+	 * @param arena	the level to simulate.
 	 */
 	private WorldLoop(int tickRate, Arena arena) {
 		mLvl = arena;
@@ -43,8 +42,8 @@ public class WorldLoop extends Thread {
 	/**
 	 * Gets an instance of the WorldLoop. This method should only be used if getInstance(int, Arena)
 	 * was ever called at least once. Calling this method first will throw an IllegalStateException.
-	 * @throws IllegalStateException
-	 * 		if getInstance(int, Arena) has never been called.
+	 * 
+	 * @throws IllegalStateException if getInstance(int, Arena) has never been called.
 	 */
 	public static WorldLoop getInstance() {
 		synchronized (WorldLoop.class) {
@@ -55,10 +54,9 @@ public class WorldLoop extends Thread {
 	
 	/**
 	 * Gets an instance of the WorldLoop.
-	 * @param tickRate
-	 * 		the desired ticks per second.
-	 * @param arena
-	 * 		the level to simulate.
+	 * 
+	 * @param tickRate	the desired ticks per second.
+	 * @param arena	the level to simulate.
 	 */
 	public static WorldLoop getInstance(int tickRate, Arena arena) {
 		synchronized (WorldLoop.class) {
@@ -69,8 +67,8 @@ public class WorldLoop extends Thread {
 	
 	/**
 	 * The set desired ticks per second.
-	 * @return
-	 * 		the number of ticks per second.
+	 * 
+	 * @return the number of ticks per second.
 	 */
 	public int getTickRate() { return mTarTick; }
 	

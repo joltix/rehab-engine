@@ -26,7 +26,7 @@ public interface Drawable {
 	
 	boolean isFacingLeft();
 	
-	void onMousePress(MouseEvent event);
+	void onMousePress();
 	
-	void onMouseRelease(MouseEvent event);	
+	void onMouseRelease();	
 }

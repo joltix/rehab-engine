@@ -92,7 +92,7 @@ public class Weapon implements OnCollisionListener {
 		double normalizedY = y - mOwner.getYCentered();
 		
 		// Apply new direction
-		phys.setAcceleration(50);
+		phys.setAcceleration(1);
 		phys.setVelocity(normalizedX, normalizedY, 1);
     }
 

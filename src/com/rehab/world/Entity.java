@@ -530,13 +530,8 @@ public abstract class Entity extends Identifiable implements Drawable, OnMoveLis
 	@Override
 	public boolean isFacingLeft() {
 		
-		// Get the current direction
-		Vector2D velo = mPhys.getVelocity();
-		Point head = velo.getPoint();
-		Point base = velo.getBasePoint();
-		
-		// Figure direction
-		if (head.getX() >= base.getX()) {
+		Point prevLoc = mPhys.getPreviousLocation();
+		if (mPhys.getX() >= prevLoc.getX()) {
 			return false;
 		} else {
 			return true;
